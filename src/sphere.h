@@ -14,10 +14,15 @@ public:
         NORMAL,
         SPECULAR
     };
+    enum {
+        VERTEX_BUFFER = 0,
+        INDEX_BUFFER,
+
+        MAX_BUFFERS
+    };
 
 private:
-    int  m_VboID;
-    int  m_IdxBufferID;
+    int m_Buffers[ MAX_BUFFERS ];
 
     typedef std::vector<Vector> VertexArray;
     typedef std::vector<Vector> ColorArray;
@@ -30,13 +35,14 @@ private:
     IndexArray  m_IndexArray;   // standard array to map vertices to tris
 
     float       m_Radius;
-    Vector      m_Position;
-    Vector      m_Scale;
-    Vector      m_Rotation;
+    Vector      m_Color;
 public:
     Sphere( float radius = 1.0f );
 
     virtual ~Sphere();
+
+    void SetColor( const Vector& color );
+
 private:
     void MakeSphere( float meridians, float parallels );
 

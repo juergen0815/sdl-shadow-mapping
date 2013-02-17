@@ -6,8 +6,8 @@
 
 #include <boost/filesystem.hpp>
 
-const int columns = 32;
-const int rows    = 12;
+const int _columns = 32;
+const int _rows    = 12;
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
@@ -17,44 +17,29 @@ const int rows    = 12;
 #define M_PI_2 1.57079632679489661923f
 #endif
 
-const static std::size_t NUM_COLORS = 12;
-static Vector sColors[NUM_COLORS] = // Rainbow Of Colors
-{
-    {1.0f,0.5f,0.5f},{1.0f,0.75f,0.5f},{1.0f,1.0f,0.5f},{0.75f,1.0f,0.5f},
-    {0.5f,1.0f,0.5f},{0.5f,1.0f,0.75f},{0.5f,1.0f,1.0f},{0.5f,0.75f,1.0f},
-    {0.5f,0.5f,1.0f},{0.75f,0.5f,1.0f},{1.0f,0.5f,1.0f},{1.0f,0.5f,0.75f}
-};
-
 Sphere::Sphere( float radius /* = 1.0f */ )
-    : m_VboID(-1)
-    , m_IdxBufferID(-1)
+    : m_Buffers( { -1 } )
     , m_Stride(1) // needed if/when we pack color + vertex into one array
-    , m_VertexBuffer( columns*rows*m_Stride )    // use the same memory pool for vertex and texture coords
-    , m_ColorBuffer( columns*rows*m_Stride )
+    , m_VertexBuffer( _columns*_rows*m_Stride )    // use the same memory pool for vertex and texture coords
+    , m_ColorBuffer( _columns*_rows*m_Stride )
     , m_Radius(radius)
-    , m_Position( { 0, 0, 3 } )
-    , m_Scale( { 1,1,1 } )
-    , m_Rotation( { 0,0,0,0 } )
+    , m_Color( { 0.75, 0.75, 0.75 } )
 {
-    // we might just want to create this in DoInitialize - and throw away the data we don't need locally
-    MakeSphere( columns, rows );
 }
 
 Sphere::~Sphere()
 {
     // shouldn't be done in d'tor...might be weakly linked to e.g. event handler...but vbo must be released from render thread
-    if ( m_VboID > 0 ) {
-        glDeleteBuffers(1, (GLuint*)&m_VboID);
-    }
-    if ( m_IdxBufferID > 0 ) {
-        glDeleteBuffers(1, (GLuint*)&m_IdxBufferID);
-    }
+    glDeleteBuffers(MAX_BUFFERS, (GLuint*)m_Buffers);
+}
+
+void Sphere::SetColor( const Vector& color )
+{
+    m_Color = color;
 }
 
 void Sphere::MakeSphere( float columns, float rows )
 {
-    std::vector< std::vector< Vector > > rings;
-
     const float RAD180 = M_PI; // PI in RAD
     const float RAD360 = M_PI*2; // 2*PI in RAD
 
@@ -74,9 +59,6 @@ void Sphere::MakeSphere( float columns, float rows )
     auto nit = m_NormalBuffer.begin();
     auto cit = m_ColorBuffer.begin();
     int looper(0);
-    int iv(0);
-
-    int numVertices = columns*rows;
 
     // from http://www.math.montana.edu/frankw/ccp/multiworld/multipleIVP/spherical/learn.htm
 
@@ -100,7 +82,7 @@ void Sphere::MakeSphere( float columns, float rows )
 
             // vertex color
             auto& color = *cit; ++cit;
-            color = sColors[iv*NUM_COLORS/numVertices]; ++iv;
+            color = m_Color;
 
             // vertices don't need to be set just yet. We just index them here
 
@@ -133,8 +115,12 @@ bool Sphere::DoInitialize( Renderer* renderer ) throw(std::exception)
     bool hasVBO  = glewGetExtension("GL_ARB_vertex_buffer_object");
     ASSERT( hasVBO, "VBOs not supported!" );
 
-    glGenBuffers(1, (GLuint*)&m_VboID);
-    glBindBuffer(GL_ARRAY_BUFFER, m_VboID);
+    // we might just want to create this in DoInitialize - and throw away the data we don't need locally
+    MakeSphere( _columns, _rows );
+
+    glGenBuffers( MAX_BUFFERS, (GLuint*)m_Buffers);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[ VERTEX_BUFFER ]);
     int bufSize = sizeof(Vector)*m_VertexBuffer.size()
                 + sizeof(Vector)*m_NormalBuffer.size()
                 + sizeof(Vector)*m_ColorBuffer.size();
@@ -153,8 +139,7 @@ bool Sphere::DoInitialize( Renderer* renderer ) throw(std::exception)
     glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(Vector)*m_ColorBuffer.size(), colors);
 
     // Index Buffer
-    glGenBuffers(1, (GLuint*)&m_IdxBufferID);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IdxBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[ INDEX_BUFFER ]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*m_IndexArray.size(), &m_IndexArray[0], GL_STATIC_DRAW);
 
     // TODO: We can delete local storage here
@@ -164,21 +149,10 @@ bool Sphere::DoInitialize( Renderer* renderer ) throw(std::exception)
 
 void Sphere::DoUpdate( float ticks ) throw(std::exception)
 {
-    m_Rotation[ Vector::X ] += 45.0f * float(ticks) / 1000.0f;
-    m_Rotation[ Vector::Y ] += 90.0f * float(ticks) / 1000.0f;
 }
 
 void Sphere::DoRender( int pass ) throw(std::exception)
 {
-    // save the initial ModelView matrix before modifying ModelView matrix
-    glPushMatrix();
-
-    glTranslatef( m_Position[Vector::X], m_Position[Vector::Y], m_Position[Vector::Z] );
-    glScalef( m_Scale[Vector::X], m_Scale[Vector::Y], m_Scale[Vector::Z] );
-    glRotatef( m_Rotation[ Vector::X ], 1, 0, 0);
-    glRotatef( m_Rotation[ Vector::Y ], 0, 1, 0);
-    glRotatef( m_Rotation[ Vector::Z ], 0, 0, 1);
-
     int vertexArrayEnabled;
     glGetIntegerv( GL_VERTEX_ARRAY, &vertexArrayEnabled );
     if (!vertexArrayEnabled) {
@@ -195,10 +169,7 @@ void Sphere::DoRender( int pass ) throw(std::exception)
         glEnableClientState(GL_COLOR_ARRAY);
     }
 
-    int blend_enabled;
-    glGetIntegerv(GL_BLEND, &blend_enabled);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_VboID);
+    glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[ VERTEX_BUFFER ]);
     // before draw, specify vertex and index arrays with their offsets
     std::size_t offset(0);
     glVertexPointer(4, GL_FLOAT, m_Stride*sizeof(Vector), (void*)offset);
@@ -210,7 +181,7 @@ void Sphere::DoRender( int pass ) throw(std::exception)
     glColorPointer(4, GL_FLOAT, m_Stride*sizeof(Vector), (void*)offset);
 
     // use index array
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IdxBufferID);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[ INDEX_BUFFER ]);
     glDrawElements( GL_TRIANGLES, m_IndexArray.size(), GL_UNSIGNED_INT, (void*)0 );
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -225,7 +196,5 @@ void Sphere::DoRender( int pass ) throw(std::exception)
     if ( !colorArrayEnabled) {
         glDisableClientState(GL_COLOR_ARRAY);
     }
-
-    glPopMatrix();
 }
 

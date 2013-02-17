@@ -16,6 +16,7 @@ Description:
 
 	Based on sdl-vertex-animation this example uses code from previous sdl-xx-examples I've written.
 	
+	Tutorial here: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-16-shadow-mapping/
 	
 	New additions:
 	

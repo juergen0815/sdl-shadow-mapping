@@ -11,6 +11,8 @@
 #include "matrix.h"
 #include "vector.h"
 
+#include <boost/shared_ptr.hpp>
+
 class RenderState
 {
 public:
@@ -47,7 +49,8 @@ public:
     void SetFlag( uint32_t flag ) { m_Flags |= flag; }
 
     void ClearFlag( uint32_t flag ) { m_Flags &= ~flag; }
-
 };
+
+typedef boost::shared_ptr<RenderState> RenderStatePtr;
 
 #endif /* RENDERSTATE_H_ */

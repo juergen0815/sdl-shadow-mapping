@@ -20,6 +20,16 @@ typedef boost::function<bool(long)> UpdateFunction;
 class Renderer : public Worker
 {
 private:
+    enum enRENDERPASS {
+        RP_COLOR_BUFFER   = 1<<0,
+        RP_STATIC_SHADOW  = 1<<1,
+        RP_DYNAMIC_SHADOW = 1<<2,
+        RP_SHADOW = RP_STATIC_SHADOW | RP_DYNAMIC_SHADOW,
+        RP_REFLECTION     = 1<<3,
+
+        RP_SYSTEM,
+        RP_SYSTEM_MASK = (1<<RP_SYSTEM)-1,
+    };
 	bool        m_Terminate;
 
     EntityList  m_InitList;

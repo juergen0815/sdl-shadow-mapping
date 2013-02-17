@@ -42,7 +42,7 @@ private:
     uint32_t m_Flags;
     int      m_OrderNum;
 
-    RenderState m_RenderState;
+    RenderStatePtr m_RenderState;
 protected:
     EntityList  m_RenderList;
     EntityList  m_InitList;
@@ -63,7 +63,7 @@ public:
 
     void ClearFlag( enFLAG flag ) { m_Flags &= ~flag; }
 
-    RenderState* GetRenderState();
+    RenderStatePtr GetRenderState();
 
     virtual bool Initialize( Renderer* renderer ) throw(std::exception);
 

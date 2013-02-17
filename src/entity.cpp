@@ -15,6 +15,7 @@
 Entity::Entity() throw ()
     : m_Flags(F_ENABLE)
     , m_OrderNum(0)
+    , m_RenderState( new RenderState ) // create a default RenderState
 {
 }
 
@@ -27,10 +28,9 @@ bool Entity::CompareEntityPriorities( const EntityPtr& a, const EntityPtr& b ) {
     return a->GetOrder() < b->GetOrder();
 }
 
-RenderState* Entity::GetRenderState()
+RenderStatePtr Entity::GetRenderState()
 {
-    // TODO: This must be pointer eventually. Can be subclassed!
-    return &m_RenderState;
+    return m_RenderState;
 }
 
 void Entity::AddEntity( EntityPtr entity, int priority /*= 0*/  )
@@ -91,6 +91,7 @@ void Entity::Render( int pass, float ticks ) throw(std::exception)
         glDisable(GL_BLEND);
     }
 
+    // render all children
     for( auto it = m_RenderList.begin(); it != m_RenderList.end(); ) {
         EntityPtr entity = *it;
         if ( entity->AreFlagsSet( Entity::F_ENABLE ) ) {

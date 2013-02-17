@@ -31,12 +31,14 @@ private:
     IndexArray  m_IndexArray;   // standard array to map vertices to tris
 
     float       m_Radius;
-    Vector      m_Position;
-    Vector      m_Rotation;
+    Vector      m_ColorFrom,
+                m_ColorTo;
 public:
     Cylinder();
 
     virtual ~Cylinder();
+
+    void SetColors( const Vector& colorFrom, const Vector& colorTo );
 
 private:
     void MakeCylinder( float meridians, float parallels );
