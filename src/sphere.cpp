@@ -20,8 +20,6 @@ const int _rows    = 12;
 Sphere::Sphere( float radius /* = 1.0f */ )
     : m_Buffers( { -1 } )
     , m_Stride(1) // needed if/when we pack color + vertex into one array
-    , m_VertexBuffer( _columns*_rows*m_Stride )    // use the same memory pool for vertex and texture coords
-    , m_ColorBuffer( _columns*_rows*m_Stride )
     , m_Radius(radius)
     , m_Color( { 0.75, 0.75, 0.75 } )
 {

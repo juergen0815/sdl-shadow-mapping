@@ -116,9 +116,6 @@ void App::InitScene( int width, int height )
     BOOST_ASSERT(renderer);
     renderer->Init();
 
-    std::vector< BrushPtr > brushes;
-    brushes.push_back( LoadBrush<TgaBrush>("water1024.tga") );
-
     ////////////////////////////////////////////////////////////////////////////
     // Compose our scene
 
@@ -136,17 +133,8 @@ void App::InitScene( int width, int height )
     // this entity renders
     viewport->AddEntity(camera, 0);
 
-    EntityPtr water( new Surface( brushes ) );
-    water->GetRenderState()->Translate( Vector(0.0, 0, 0), Vector(1.0f, 1.0f, 1.0f) );
-    water->GetRenderState()->Rotate( Vector(0.0f, 0.0f, 0.0f ) );
-    // this entity renders
-    camera->AddEntity(water, 20 );
-
-    std::vector< BrushPtr > ct;
-    ct.push_back( LoadBrush<BmpBrush>("Wood.bmp") );
-
     {
-        EntityPtr cube( new Cube( ct ) );
+        EntityPtr cube( new Cube( ) );
         cube->GetRenderState()->Translate( Vector(-4.0, 3, 0), Vector(1.0f, 1.0f, 1.0f) );
         cube->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
         // this entity renders
@@ -168,7 +156,7 @@ void App::InitScene( int width, int height )
     }
 
     // some custom event handler
-    m_EventHandlerList.push_back( boost::bind( &OnHandleEvent, _1, water ) );
+//    m_EventHandlerList.push_back( boost::bind( &OnHandleEvent, _1, water ) );
 }
 
 void App::Init(int argc, char* argv[])
