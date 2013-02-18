@@ -1,0 +1,19 @@
+Draw one pass into depth buffer
+
+Use depth to set "bright" light value
+
+Render fully light scene
+
+
+- Idea: Use a "Ray caster" to render shadow pass. Don't run all this through the main renderer. Maybe
+        create some render targets. A light pass target, a shadow pass target, etc.
+        
+The problem: 
+    It should be possible to render shadows/reflection transparently through a given scene graph
+    Nodes can request interest in a certain render pass, but some specific setup for each pass might
+    require a dedicated renderer for each pass. Shadow casting can be done in a dynamic and static way,
+    a static light map only needs to be calculated once for static objects and light sources and can 
+    be "baked" into the scene, while a dynamic shadow map must be rendered each frame.
+
+    It would be nice to render the shadow map in parallel with the main render loop. We don't necessarily 
+    need to update shadows every frame or it doesn't need to be done in sync to the render loop. 

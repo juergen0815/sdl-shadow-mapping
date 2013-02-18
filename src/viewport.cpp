@@ -38,7 +38,7 @@ void Viewport::SetFrustum( int width, int height )
     m_Frustum = { -fW, fW, -fH, fH, zNear, zFar };
 }
 
-void Viewport::Render( int pass, float ticks ) throw(std::exception)
+void Viewport::Render( int pass ) throw(std::exception)
 {
     // backup previous viewport - needed if we render into a pbuffer
     GLint vp[4];
@@ -46,11 +46,33 @@ void Viewport::Render( int pass, float ticks ) throw(std::exception)
     // backup projection matrix for internal storage
     Matrix modelview;
     glGetFloatv( GL_MODELVIEW_MATRIX, (float*)modelview );
+
     Matrix projection;
     glGetFloatv( GL_PROJECTION_MATRIX, (float*)projection );
 
+    // Only 3D we do not care about overlays - just yet
+    glViewport(0, 0, (GLsizei)m_Width, (GLsizei)m_Height);
+
+    // set perspective viewing frustum
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf( m_Projection );
+
+    // switch to modelview matrix in order to set scene
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    // if we want to move this thing, we would need to multiply this here somehow...
+
+    glClearColor( m_ClearColor[ Vector::R ],
+                  m_ClearColor[ Vector::G ],
+                  m_ClearColor[ Vector::B ],
+                  m_ClearColor[ Vector::A ] );                   // background color
+
+    // This should not be in here
+    // clear buffer
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
     // apply local viewport and render children
-    Entity::Render( pass, ticks );
+    Entity::Render( pass );
 
     // restore previous viewport
     glViewport(vp[0], vp[1], vp[2], vp[3]);
@@ -95,28 +117,4 @@ void Viewport::SetClearColor( const Vector& col )
 {
     m_ClearColor = col;
 }
-
-void Viewport::DoUpdate( float ticks ) throw(std::exception)
-{
-    // Only 3D we do not care about overlays - just yet
-    glViewport(0, 0, (GLsizei)m_Width, (GLsizei)m_Height);
-
-    // set perspective viewing frustum
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf( m_Projection );
-
-    // switch to modelview matrix in order to set scene
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    // if we want to move this thing, we would need to multiply this here somehow...
-
-    glClearColor( m_ClearColor[ Vector::R ],
-                  m_ClearColor[ Vector::G ],
-                  m_ClearColor[ Vector::B ],
-                  m_ClearColor[ Vector::A ] );                   // background color
-    // clear buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-}
-
-
 

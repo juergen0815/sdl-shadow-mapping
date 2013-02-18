@@ -264,18 +264,16 @@ void Renderer::Run()
             // DONT DO THIS. Just to keep it simple! Use a scene graph instead!
 
             // TODO: Render shadow map
+            //       We will need multiple passes here.
 
             // run list
-            for( auto it = m_RenderList.begin(); it != m_RenderList.end(); ) {
-                EntityPtr entity = *it;
-                if ( entity->AreFlagsSet( Entity::F_ENABLE ) ) {
-                    entity->Render( 0, (ticks - timeStamp)*m_TimeBase*float(m_Pause) );
+            for( auto& entity : m_RenderList ) {
+                if ( entity->IsFlagSet( Entity::F_ENABLE ) &&
+                    !entity->IsFlagSet( Entity::F_DELETE ) )
+                {
+                    // don't bother rendering if we are marked for deletion
+                    entity->Render( 0 );
                 }
-                if ( entity->AreFlagsSet( Entity::F_DELETE ) ) {
-                    it = m_RenderList.erase( it );
-                    continue;
-                }
-                ++it;
             }
 
             // fourth: swap the buffers
@@ -284,9 +282,22 @@ void Renderer::Run()
             // Store timestamp after we have rendered all entities
             timeStamp = ticks;
 
+            // clean up orphand children
+            for( auto it = m_RenderList.begin(); it != m_RenderList.end(); ) {
+                EntityPtr entity = *it;
+                // process destroy
+                entity->CheckDestroy();
+                if ( entity->IsFlagSet( Entity::F_DELETE ) ) {
+                    it = m_RenderList.erase( it );
+                    continue;
+                }
+                ++it;
+            }
+
         } while (!m_Terminate);
 
         m_Updaters.clear();
+        // this should be empty, but anyhow
         m_RenderList.clear();
     }
     catch ( std::bad_alloc & ex ) {

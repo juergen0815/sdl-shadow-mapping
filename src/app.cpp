@@ -161,8 +161,8 @@ void App::InitScene( int width, int height )
     }
     {
         EntityPtr e( new Cylinder( ) );
-        e->GetRenderState()->Translate( Vector(4.0, 2.5, 0), Vector(1.0f, 0.1f, 1.0f) );
-        e->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
+        e->GetRenderState()->Translate( Vector(4.0, 2.5, 0), Vector(1.0f, 0.3f, 1.0f) );
+        e->GetRenderState()->Rotate( Vector( 20.0f, -20.0f, 0.0f ) );
         // this entity renders
         camera->AddEntity(e, 20 );
     }
@@ -252,7 +252,7 @@ int App::Run()
                     break;
                 }
                 // Remove from event handler as well if marked for deletion
-                if ( (*entity)->AreFlagsSet( Entity::F_DELETE ) ) {
+                if ( (*entity)->IsFlagSet( Entity::F_DELETE ) ) {
                     entity = m_EntityEventHandlerList.erase( entity );
                     continue;
                 }

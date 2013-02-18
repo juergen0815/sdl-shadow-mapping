@@ -42,18 +42,15 @@ public:
 
     int GetHeight() const { return m_Height; }
 
-    virtual void Render( int pass, float ticks ) throw(std::exception);
+    virtual void Render( int pass ) throw(std::exception);
 private:
     virtual bool HandleEvent( const SDL_Event& event );
 
     virtual bool DoInitialize( Renderer* renderer ) throw(std::exception);
 
-    virtual void DoUpdate( float ticks ) throw(std::exception);
-
     virtual void DoRender( int pass ) throw(std::exception) {}
 
     void SetFrustum( int width, int height );
 };
-
 
 #endif /* VIEWPORT_H_ */

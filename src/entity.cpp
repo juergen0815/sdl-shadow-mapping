@@ -19,11 +19,6 @@ Entity::Entity() throw ()
 {
 }
 
-void Entity::Destroy()
-{
-    delete this;
-}
-
 bool Entity::CompareEntityPriorities( const EntityPtr& a, const EntityPtr& b ) {
     return a->GetOrder() < b->GetOrder();
 }
@@ -58,35 +53,41 @@ bool Entity::Initialize( Renderer* renderer ) throw(std::exception)
     return r;
 }
 
-void Entity::Render( int pass, float ticks ) throw(std::exception)
+void Entity::Update( float ticks ) throw(std::exception)
 {
-    DoUpdate(ticks);
+    if ( IsFlagSet( Entity::F_ENABLE )) {
+        DoUpdate(ticks);
+    }
+}
+
+void Entity::Render( int pass ) throw(std::exception)
+{
     glPushMatrix();
     glMultMatrixf( GetRenderState()->GetMatrix() );
 
     uint32_t flags = GetRenderState()->GetFlags();
 
-    int gl_blend_src(0), gl_blend_dst(0);
-    int alpha_enabled;
-    glGetIntegerv(GL_ALPHA_TEST, &alpha_enabled);
-    if (!alpha_enabled && (flags & RenderState::ALPHA_F) )
+    int glBlendSrc(0), glBlendDst(0);
+    int alphaEnabled;
+    glGetIntegerv(GL_ALPHA_TEST, &alphaEnabled);
+    if (!alphaEnabled && (flags & RenderState::ALPHA_F) )
     {
-        glGetIntegerv(GL_BLEND_SRC, &gl_blend_src);
-        glGetIntegerv(GL_BLEND_DST, &gl_blend_dst);
+        glGetIntegerv(GL_BLEND_SRC, &glBlendSrc);
+        glGetIntegerv(GL_BLEND_DST, &glBlendDst);
         glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_ALPHA_TEST);
     }
-    else if (alpha_enabled && (flags & RenderState::ALPHA_F) == 0 )
+    else if (alphaEnabled && (flags & RenderState::ALPHA_F) == 0 )
     {
         glDisable(GL_ALPHA_TEST);
     }
-    int blend_enabled;
-    glGetIntegerv(GL_BLEND, &blend_enabled);
-    if (!blend_enabled && (flags & RenderState::BLEND_F) )
+    int blendEnabled;
+    glGetIntegerv(GL_BLEND, &blendEnabled);
+    if (!blendEnabled && (flags & RenderState::BLEND_F) )
     {
         glEnable(GL_BLEND);
     }
-    else if ( blend_enabled && (flags & RenderState::BLEND_F) == 0 )
+    else if ( blendEnabled && (flags & RenderState::BLEND_F) == 0 )
     {
         glDisable(GL_BLEND);
     }
@@ -94,20 +95,34 @@ void Entity::Render( int pass, float ticks ) throw(std::exception)
     // render all children
     for( auto it = m_RenderList.begin(); it != m_RenderList.end(); ) {
         EntityPtr entity = *it;
-        if ( entity->AreFlagsSet( Entity::F_ENABLE ) ) {
-            entity->Render( pass, ticks );
-        }
-        if ( entity->AreFlagsSet( Entity::F_DELETE ) ) {
-            it = m_RenderList.erase( it );
-            continue;
+        if ( entity->IsFlagSet( Entity::F_ENABLE|Entity::F_VISIBLE ) &&
+            !entity->IsFlagSet( Entity::F_DELETE ) )
+        {
+            // don't bother rendering if we are marked for deletion
+            entity->Render( pass );
         }
         ++it;
     }
     DoRender( pass );
 
-    if (!alpha_enabled && (flags & RenderState::ALPHA_F) )
+    if (!alphaEnabled && (flags & RenderState::ALPHA_F) )
     {
-        glBlendFunc( gl_blend_src, gl_blend_dst);
+        glBlendFunc( glBlendSrc, glBlendDst);
     }
     glPopMatrix();
+}
+
+void Entity::CheckDestroy( ) throw(std::exception)
+{
+    for( auto it = m_RenderList.begin(); it != m_RenderList.end(); ) {
+        EntityPtr entity = *it;
+        // Process children first
+        entity->CheckDestroy();
+        // removed from list
+        if ( entity->IsFlagSet( Entity::F_DELETE ) ) {
+            it = m_RenderList.erase( it );
+            continue;
+        }
+        ++it;
+    }
 }

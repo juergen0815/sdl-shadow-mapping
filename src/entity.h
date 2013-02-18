@@ -51,13 +51,11 @@ public:
 
 	virtual ~Entity() {}
 
-    void Destroy();
-
 	virtual bool HandleEvent( const SDL_Event& event )  { return false; }
 
 	uint32_t GetFlags() const { return m_Flags; }
 
-	bool AreFlagsSet( enFLAG flags ) const { return (m_Flags & flags) == flags; }
+	bool IsFlagSet( unsigned int flags ) const { return (m_Flags & flags) != 0; }
 
     void SetFlag( enFLAG flag ) { m_Flags |= flag; }
 
@@ -67,7 +65,16 @@ public:
 
     virtual bool Initialize( Renderer* renderer ) throw(std::exception);
 
-    virtual void Render( int pass, float ticks ) throw(std::exception);
+    virtual void Render( int pass ) throw(std::exception);
+
+    virtual void CheckDestroy( ) throw(std::exception);
+
+    /*!
+     * This is not called unless explicitly registered to the renderer. It also
+     * does not propagate the render tree.
+     * This allows to flexible with the update methods and register external updaters
+     */
+    void Update( float ticks ) throw(std::exception);
 
     void AddEntity( EntityPtr entity, int priority = 0 );
 
@@ -83,7 +90,7 @@ protected:
 
     virtual void DoRender( int pass ) throw( std::exception ) = 0;
 
-    virtual void DoUpdate( float ticks ) throw(std::exception) = 0;
+    virtual void DoUpdate( float ticks ) throw(std::exception) {};
 
     friend class Renderer;
 };
