@@ -6,6 +6,7 @@
  */
 
 
+#include "renderer.h"
 #include "surface.h"
 #include "cube.h"
 #include "brush.h"
@@ -14,8 +15,9 @@
 #include <cmath>
 
 #include <boost/filesystem.hpp>
+#include <boost/bind.hpp>
 
-const int sCcolumns = 120;
+const int sColumns = 120;
 const int sRows    = 120;
 
 struct PoolDeleter
@@ -38,14 +40,17 @@ Surface::Surface( const std::vector< BrushPtr >& assets )
 {
     m_Textures.resize( MAX_TEXTURES );
     m_Textures = { TexturePtr() };
+}
 
+void Surface::MakeSurface( int columns, int rows )
+{
     // we might just want to create this in DoInitialize - and throw away the data we don't need locally
 
     // allocate memory buffers for vertex and texture coord
-    m_VertexBuffer.resize( sCcolumns*sRows*m_Stride );
+    m_VertexBuffer.resize( columns*rows*m_Stride );
 
     // generate index array; we got rows * columns * 2 tris
-    m_IndexArray.resize( (sRows-1) * (sCcolumns-1) * 3 * 2 ); // 3 vertices per tri, 2 tri per quad = 6 entries per iteration
+    m_IndexArray.resize( (rows-1) * (columns-1) * 3 * 2 ); // 3 vertices per tri, 2 tri per quad = 6 entries per iteration
 
     int looper(0);
     // width x height is always a quad, not a rect
@@ -55,27 +60,27 @@ Surface::Surface( const std::vector< BrushPtr >& assets )
     // x/z - y  up. Surface lays flat
 
     // generate vertex array
-    const float xstep = (2*width_2)/sCcolumns; // mesh sub divider - 0.2f
-    const float zstep = (2*depth_2)/sRows; // mesh sub divider - 0.2f
+    const float xstep = (2*width_2)/columns; // mesh sub divider - 0.2f
+    const float zstep = (2*depth_2)/rows; // mesh sub divider - 0.2f
     const float amp  = 0.85f; // "height" of wave
     const float numWaves = 16.0f; // num of sin loops (or waves)
     auto vit = m_VertexBuffer.begin();
 
     // I think we need an additional row/column to finish this mesh ??
-    for ( float z = 0; z < sRows; ++z )
+    for ( float z = 0; z < rows; ++z )
     {
-        for ( float x = 0; x < sCcolumns; ++x )
+        for ( float x = 0; x < columns; ++x )
         {
             Vector& vertex = *vit; ++vit;
             vertex[ Vector::X ] = x * xstep - width_2; // -4.4 ... +4.4
             // maybe I should shift this for each row, huh, norm x to "length" of column (0.0 - 1.0)
-            vertex[ Vector::Y ] = std::sin( (x/sCcolumns) * numWaves ) * amp; // make z a big "wavy" -- fix this. Must be multiple if sin(360)
+            vertex[ Vector::Y ] = std::sin( (x/columns) * numWaves ) * amp; // make z a big "wavy" -- fix this. Must be multiple if sin(360)
             vertex[ Vector::Z ] = z * zstep - depth_2; // -4.4 ... +4.4
 
             // calc texture positions
             Vector& texCoord = *vit; ++vit;
-            texCoord[ Vector::U ] = x/(sCcolumns-1);
-            texCoord[ Vector::V ] = z/(sRows-1);
+            texCoord[ Vector::U ] = x/(columns-1);
+            texCoord[ Vector::V ] = z/(rows-1);
 
             // this needs work: we use a row * col vertex and texture array
             // to extract triangles, the index array needs to be calculated appropriately
@@ -89,19 +94,19 @@ Surface::Surface( const std::vector< BrushPtr >& assets )
             // e.g. t[0] = { 0,1,1'} { 1',0',1 } ...
 
             // skip last column/row - already indexed
-            if ( x < (sCcolumns-1) && z < (sRows-1) ) {
+            if ( x < (columns-1) && z < (rows-1) ) {
                 // vertices don't need to be set just yet. We just index them here
 
                 // top tri
                 int
-                idx = int(x + 0 + sCcolumns*z);     m_IndexArray[ looper++ ] = idx;  // 0x0
-                idx = int(x + 1 + sCcolumns*z);     m_IndexArray[ looper++ ] = idx;  // 1x0
-                idx = int(x + 0 + sCcolumns*(z+1)); m_IndexArray[ looper++ ] = idx;  // 1x1 - bottom row
+                idx = int(x + 0 + columns*z);     m_IndexArray[ looper++ ] = idx;  // 0x0
+                idx = int(x + 1 + columns*z);     m_IndexArray[ looper++ ] = idx;  // 1x0
+                idx = int(x + 0 + columns*(z+1)); m_IndexArray[ looper++ ] = idx;  // 1x1 - bottom row
 
                 // bottom tri
-                idx = int(x + 1 + sCcolumns*z);     m_IndexArray[ looper++ ] = idx; // 0x0
-                idx = int(x + 0 + sCcolumns*(z+1)); m_IndexArray[ looper++ ] = idx; // 1x1 - bottom row
-                idx = int(x + 1 + sCcolumns*(z+1)); m_IndexArray[ looper++ ] = idx; // 0x1 - bottom row
+                idx = int(x + 1 + columns*z);     m_IndexArray[ looper++ ] = idx; // 0x0
+                idx = int(x + 0 + columns*(z+1)); m_IndexArray[ looper++ ] = idx; // 1x1 - bottom row
+                idx = int(x + 1 + columns*(z+1)); m_IndexArray[ looper++ ] = idx; // 0x1 - bottom row
                 idx = 0;
             }
         }
@@ -136,6 +141,8 @@ bool Surface::DoInitialize( Renderer* renderer ) throw(std::exception)
     bool hasVBO  = glewGetExtension("GL_ARB_vertex_buffer_object");
     ASSERT( hasVBO, "VBOs not supported!" );
 
+    MakeSurface( sColumns, sRows );
+
     glGenBuffers( MAX_BUFFERS, (GLuint*)m_Buffers );
 
     glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[ VERTEX_BUFFER ] );
@@ -150,12 +157,14 @@ bool Surface::DoInitialize( Renderer* renderer ) throw(std::exception)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[ INDEX_BUFFER ]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*m_IndexArray.size(), &m_IndexArray[0], GL_STATIC_DRAW);
 
+    // an Entity does not update by default
+    renderer->RegisterUpdateFunction( boost::bind( &Surface::Update, this, _1) );
+
     return true;
 }
 
 void Surface::DoRender( int pass ) throw(std::exception)
 {
-
     int vertexArrayEnabled;
     glGetIntegerv( GL_VERTEX_ARRAY, &vertexArrayEnabled );
     if (!vertexArrayEnabled) {
@@ -231,7 +240,7 @@ void Surface::DoUpdate( float ticks ) throw(std::exception)
             auto& vertex = *vit; vit += m_Stride;
             vertex[ Vector::Y ] = (*vit)[ Vector::Y ];
         }
-        auto& last = m_VertexBuffer[ sCcolumns*sRows*m_Stride-m_Stride];
+        auto& last = m_VertexBuffer[ sColumns*sRows*m_Stride-m_Stride];
         last[ Vector::Y ] = first[ Vector::Y ];
 
         // I should probably use split buffers to not copy tex coords again and again

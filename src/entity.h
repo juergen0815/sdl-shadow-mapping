@@ -74,7 +74,7 @@ public:
      * does not propagate the render tree.
      * This allows to flexible with the update methods and register external updaters
      */
-    void Update( float ticks ) throw(std::exception);
+    bool Update( float ticks ) throw(std::exception);
 
     void AddEntity( EntityPtr entity, int priority = 0 );
 

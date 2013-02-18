@@ -70,6 +70,7 @@ protected:
 
     virtual void DoUpdate( float ticks ) throw(std::exception);
 
+    void MakeSurface( int columns, int rows );
 };
 
 #endif /* MESH_H */

@@ -8,10 +8,13 @@
 
 #include "camera.h"
 #include "joystick.h"
+#include "renderer.h"
 
 #include <GL/glew.h>
 
 #include <SDL/SDL.h>
+
+#include <boost/bind.hpp>
 
 Camera::Camera( SDL_Joystick* joystick )
     : m_MouseLeftDown(false)
@@ -31,6 +34,8 @@ Camera::~Camera()
 
 bool Camera::DoInitialize( Renderer* renderer ) throw( std::exception )
 {
+    // make us updateable
+    renderer->RegisterUpdateFunction( boost::bind( &Camera::Update, this, _1) );
     return true;
 }
 

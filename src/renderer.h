@@ -15,7 +15,7 @@
 #include <boost/function.hpp>
 #include <boost/unordered_map.hpp>
 
-typedef boost::function<bool(long)> UpdateFunction;
+typedef boost::function<bool(float)> UpdateFunction;
 
 class Renderer : public Worker
 {

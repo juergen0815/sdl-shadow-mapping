@@ -53,11 +53,12 @@ bool Entity::Initialize( Renderer* renderer ) throw(std::exception)
     return r;
 }
 
-void Entity::Update( float ticks ) throw(std::exception)
+bool Entity::Update( float ticks ) throw(std::exception)
 {
     if ( IsFlagSet( Entity::F_ENABLE )) {
         DoUpdate(ticks);
     }
+    return false;
 }
 
 void Entity::Render( int pass ) throw(std::exception)
