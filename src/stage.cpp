@@ -15,6 +15,7 @@ Stage::Stage( int width, int height, SDL_Joystick* joystick )
     , m_LightingStage( new Viewport )
     , m_Camera( new Camera(joystick) )
     , m_World( new World )
+    , m_ShadowMap( FrameBuffer::F_ENABLE_DEPTH_BUFFER_F ) // depth buffer only!
 {
     // camera is attached to main stage
     m_MainStage->AddEntity( m_Camera );
@@ -131,6 +132,8 @@ void Stage::Render( int pass ) throw(std::exception)
         }
 
     } while (++renderPass < NUM_PASSES );
+
+    m_Overlay->Render( 0 );
 
     if ( !lighting ) glDisable(GL_LIGHTING);
 }
