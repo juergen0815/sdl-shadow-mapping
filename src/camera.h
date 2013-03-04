@@ -42,5 +42,7 @@ private:
     float GetJoystickAxisValue( int index );
 };
 
+typedef boost::shared_ptr<Camera> CameraPtr;
+
 
 #endif /* CAMERA_H_ */

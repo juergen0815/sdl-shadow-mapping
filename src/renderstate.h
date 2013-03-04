@@ -27,6 +27,8 @@ public:
 protected:
     uint32_t m_Flags;
     Matrix   m_Matrix;
+
+    Matrix   m_Projection;
 public:
     RenderState();
 
@@ -37,6 +39,14 @@ public:
     Matrix& GetMatrix();
 
     const Matrix& GetMatrix() const;
+
+    RenderState& LoadProjectionMatrix( const Matrix& projection );
+
+    Matrix& GetProjectionMatrix();
+
+    const Matrix& GetProjectionMatrix() const;
+
+    RenderState& Project();
 
     RenderState& Translate( const Vector& position, const Vector& scale = Vector(1.0f, 1.0f, 1.0f ) );
 

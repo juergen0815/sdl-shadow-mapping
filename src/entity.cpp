@@ -63,8 +63,11 @@ bool Entity::Update( float ticks ) throw(std::exception)
 
 void Entity::Render( int pass ) throw(std::exception)
 {
+    // if regular mode do transform, if replay read & load projection matrix from render state
     glPushMatrix();
     glMultMatrixf( GetRenderState()->GetMatrix() );
+    // store projection matrix
+    glGetFloatv( GL_PROJECTION_MATRIX, (float*)GetRenderState()->GetProjectionMatrix() );
 
     uint32_t flags = GetRenderState()->GetFlags();
 

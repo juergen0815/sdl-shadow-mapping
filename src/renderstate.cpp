@@ -31,6 +31,29 @@ const Matrix& RenderState::GetMatrix() const
     return m_Matrix;
 }
 
+RenderState& RenderState::LoadProjectionMatrix( const Matrix& projection )
+{
+    // loading a projection the slow way - preferred is using memcpy( (float*)GetProjectionMatrix(), m, sizeof(Matrix) );
+    m_Projection = projection;
+    return *this;
+}
+
+Matrix& RenderState::GetProjectionMatrix()
+{
+    return m_Projection;
+}
+
+const Matrix& RenderState::GetProjectionMatrix() const
+{
+    return m_Projection;
+}
+
+RenderState& RenderState::Project()
+{
+    m_Projection *= m_Matrix;
+    return *this;
+}
+
 RenderState& RenderState::Translate( const Vector& position, const Vector& scale /* = Vector(1.0f, 1.0f, 1.0f ) */ )
 {
     Matrix trans( scale[ Vector::X ],   0.0f,                 0.0f,                 0.0f,

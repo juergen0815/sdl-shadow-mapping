@@ -16,6 +16,16 @@
 
 class Matrix
 {
+public:
+    enum {
+        SCALE_X = 0,
+        SCALE_Y = 5,
+        SCALE_Z = 10,
+
+        POS_X = 12,
+        POX_Y = 13,
+        POS_Z = 14,
+    };
 private:
     float m[16]; // 12/13/14 -> x/y/z
 public:

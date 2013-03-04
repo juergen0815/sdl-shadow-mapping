@@ -10,32 +10,60 @@
 
 #include <GL/glew.h>
 
+Frustum::Frustum( float fov /*= 60.0f */, float zNear /* = 1.0f */, float zFar /* = 100.0f */ )
+    : m_Fov( fov )
+    , m_ZNear( zNear )
+    , m_ZFar( zFar )
+
+    , m_Left(0)
+    , m_Right(0)
+    , m_Bottom(0)
+    , m_Top(0)
+{
+}
+
 void Frustum::Set()
 {
     glFrustum( m_Left, m_Right, m_Bottom, m_Top, m_ZNear, m_ZFar );
 }
 
-Viewport::Viewport( int width, int height )
-    : m_Width(width)
-    , m_Height(height)
+void Frustum::Calculate( int w, int h )
 {
-    SetFrustum( width, height );
+    static const float pi = 3.1415926535897932384626433832795f;
+
+    float aspect = float(w)/float(h);
+    float fH = -std::tan( m_Fov / 360.0f * pi ) * m_ZNear;
+    float fW = fH * aspect;
+    m_Left  = -fW;
+    m_Right =  fW;
+    m_Bottom= -fH;
+    m_Top   =  fH;
+}
+
+Viewport::Viewport( int width, int height )
+    : m_RenderStateProxy( new RenderState( 0, 0, width, height ) )
+{
+    m_RenderState = RenderStatePtr(m_RenderStateProxy);
+}
+
+Viewport::Viewport( int x, int y, int width, int height )
+    : m_RenderStateProxy( new RenderState( x, y, width, height ) )
+{
+    m_RenderState = RenderStatePtr(m_RenderStateProxy);
 }
 
 Viewport::~Viewport()
 {
 }
 
-void Viewport::SetFrustum( int width, int height )
+void Viewport::Set( int x, int y, int width, int height )
 {
-    const float pi = 3.1415926535897932384626433832795f;
-    float fov = 60.0f;
-    float aspect = float(m_Width)/float(m_Height);
-    float zNear = 1.0f;
-    float zFar = 1000.0f;
-    float fH = std::tan( fov / 360.0f * pi ) * zNear;
-    float fW = fH * aspect;
-    m_Frustum = { -fW, fW, -fH, fH, zNear, zFar };
+    m_RenderStateProxy->Set(x,y,width,height);
+}
+
+void Viewport::SetSize( int width, int height )
+{
+    m_RenderStateProxy->Set(m_RenderStateProxy->m_XPos,m_RenderStateProxy->m_YPos,width,height);
 }
 
 void Viewport::Render( int pass ) throw(std::exception)
@@ -51,21 +79,22 @@ void Viewport::Render( int pass ) throw(std::exception)
     glGetFloatv( GL_PROJECTION_MATRIX, (float*)projection );
 
     // Only 3D we do not care about overlays - just yet
-    glViewport(0, 0, (GLsizei)m_Width, (GLsizei)m_Height);
+    glViewport( m_RenderStateProxy->m_XPos, m_RenderStateProxy->m_YPos,
+                (GLsizei)m_RenderStateProxy->m_Width, (GLsizei)m_RenderStateProxy->m_Height);
 
     // set perspective viewing frustum
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf( m_Projection );
+    glLoadMatrixf( m_RenderStateProxy->m_Projection );
 
     // switch to modelview matrix in order to set scene
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     // if we want to move this thing, we would need to multiply this here somehow...
 
-    glClearColor( m_ClearColor[ Vector::R ],
-                  m_ClearColor[ Vector::G ],
-                  m_ClearColor[ Vector::B ],
-                  m_ClearColor[ Vector::A ] );                   // background color
+    glClearColor( m_RenderStateProxy->m_ClearColor[ Vector::R ],
+                  m_RenderStateProxy->m_ClearColor[ Vector::G ],
+                  m_RenderStateProxy->m_ClearColor[ Vector::B ],
+                  m_RenderStateProxy->m_ClearColor[ Vector::A ] );                   // background color
 
     // This should not be in here
     // clear buffer
@@ -90,31 +119,29 @@ bool Viewport::DoInitialize( Renderer* renderer ) throw(std::exception)
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    m_Frustum.Set();
-    glGetFloatv( GL_PROJECTION_MATRIX, (float*)m_Projection );
+    m_RenderStateProxy->m_Frustum.Set();
+    glGetFloatv( GL_PROJECTION_MATRIX, (float*)m_RenderStateProxy->m_Projection );
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
     return true;
 }
-
-bool Viewport::HandleEvent(const SDL_Event& event)
-{
-    switch (event.type) {
-    case SDL_VIDEORESIZE:
-        m_Width  = event.resize.w;
-        m_Height = event.resize.h;
-        // TODO: Flag reset frustum
-        SetFrustum( m_Width, m_Height );
-        break;
-    default: break;
-    }
-    return false;
-}
+//
+//bool Viewport::HandleEvent(const SDL_Event& event)
+//{
+//    switch (event.type) {
+//    case SDL_VIDEORESIZE:
+//        // TODO: - use a relative size to screen - or do not handle event here
+//        m_RenderStateProxy->m_Frustum.Calculate( event.resize.w, event.resize.h );
+//        break;
+//    default: break;
+//    }
+//    return false;
+//}
 
 void Viewport::SetClearColor( const Vector& col )
 {
-    m_ClearColor = col;
+    m_RenderStateProxy->m_ClearColor = col;
 }
 
