@@ -10,10 +10,17 @@
 
 #include "err.h"
 #include "entity.h"
+#include "light.h"
+
+#include <list>
 
 class World : public Entity
 {
-    bool m_IsInitialized;
+public:
+    typedef std::list< LightPtr > LightList;
+private:
+    bool        m_IsInitialized;
+    LightList   m_Lights;
 public:
     World();
 
@@ -21,6 +28,7 @@ public:
 
     void AddLight( LightPtr light );
 
+    const LightList& GetLights() const;
 protected:
     virtual bool DoInitialize( Renderer* renderer ) throw( std::exception );
 

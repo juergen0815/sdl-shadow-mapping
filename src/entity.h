@@ -38,6 +38,19 @@ public:
         F_VISIBLE = (1<<F_VISIBLE_B),
         F_DELETE  = (1<<F_DELETE_B),
     };
+
+    enum enRENDER_PASS {
+        PASS_SHADOW_MAP = 0, // render shadow map
+        PASS_LIGHTING   = 1, // render regular pass (incl. lighting)
+        PASS_SHADOW_TEST= 2, // combine shadow map
+
+        NUM_PASSES
+    };
+    enum enRENDER_PASS_F {
+        PASS_SHADOW_MAP_F = 1<<PASS_SHADOW_MAP,  // render shadow map
+        PASS_LIGHTING_F   = 1<<PASS_LIGHTING,    // render regular pass (incl. lighting)
+        PASS_SHADOW_TEST_F= 1<<PASS_SHADOW_TEST, // combine shadow map
+    };
 private:
     uint32_t m_Flags;
     int      m_OrderNum;

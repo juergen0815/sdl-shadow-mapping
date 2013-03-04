@@ -41,7 +41,6 @@ private:
         int     m_Height;
         Vector  m_ClearColor;
         Frustum m_Frustum;
-        Matrix  m_Projection;
 
         RenderState( int x, int y, int width, int height )
         : m_XPos(x)
@@ -67,7 +66,7 @@ private:
 public:
     Viewport( int x, int y, int width, int height );
 
-    Viewport( int width, int height );
+    Viewport( int width = 0, int height = 0 );
 
     virtual ~Viewport();
 
@@ -83,11 +82,12 @@ public:
 
     virtual void Render( int pass ) throw(std::exception);
 private:
-//    virtual bool HandleEvent( const SDL_Event& event );
 
     virtual bool DoInitialize( Renderer* renderer ) throw(std::exception);
 
     virtual void DoRender( int pass ) throw(std::exception) {}
 };
+
+typedef boost::shared_ptr< Viewport > ViewportPtr;
 
 #endif /* VIEWPORT_H_ */

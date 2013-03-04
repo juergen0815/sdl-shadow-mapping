@@ -30,8 +30,22 @@ int Ortho::GetHeight() const
     return m_RenderStateProxy->m_Height;
 }
 
+void Ortho::Set( int x, int y, int width, int height )
+{
+    m_RenderStateProxy->Set(x,y,width,height);
+}
+
+void Ortho::SetSize( int width, int height )
+{
+    m_RenderStateProxy->Set(m_RenderStateProxy->m_XPos,m_RenderStateProxy->m_YPos,width,height);
+}
 
 void Ortho::Render( int pass ) throw(std::exception)
 {
+
 }
 
+bool Ortho::DoInitialize( Renderer* renderer ) throw(std::exception)
+{
+    return true;
+}

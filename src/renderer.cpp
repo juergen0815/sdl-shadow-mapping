@@ -164,7 +164,6 @@ void Renderer::InitGL()
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
 //    glEnable(GL_TEXTURE_2D);
 //    glEnable(GL_CULL_FACE);
 
@@ -179,19 +178,6 @@ void Renderer::InitGL()
     glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_ALPHA_TEST);
     glEnable( GL_BLEND );
-
-    GLfloat lightKa[] = {.2f, .2f, .2f, 1.0f};  // ambient light
-    GLfloat lightKd[] = {.7f, .7f, .7f, 1.0f};  // diffuse light
-    GLfloat lightKs[] = {  1,   1,   1,    1};  // specular light
-    glLightfv(GL_LIGHT0, GL_AMBIENT, lightKa);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightKd);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, lightKs);
-
-    // position the light
-    float lightPos[4] = {0, 0, 30, 0}; // positional light
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-
-    glEnable(GL_LIGHT0);                        // MUST enable each light source after configuration
 
     glClearColor(0, 0, 0, 0);                   // background color
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);

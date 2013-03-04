@@ -8,13 +8,7 @@
 #include "err.h"
 #include "app.h"
 #include "renderer.h"
-
-#include "viewport.h"
-#include "camera.h"
-#include "surface.h"
-#include "cube.h"
-#include "sphere.h"
-#include "cylinder.h"
+#include "stage.h"
 
 #include "brushloader.h"
 
@@ -28,8 +22,6 @@
 
 #include <string>
 
-// based on NeHe: http://nehe.gamedev.net/tutorial/bump-mapping,_multi-texturing_&_extensions/16009/
-
 App::App()
     : m_Worker(new Renderer)
     , m_Joystick(nullptr)
@@ -39,8 +31,11 @@ App::App()
 App::~App()
 {
     if ( m_Joystick ) SDL_JoystickClose(m_Joystick);
+    // probably a good idea to check if we have actually been created
+    SDL_Quit();
 }
 
+// example of generic event handler
 bool OnHandleEvent( const SDL_Event& event, EntityPtr c1 )
 {
     ASSERT( c1 , "No entities in event handler!" );
@@ -120,40 +115,11 @@ void App::InitScene( int width, int height )
     // Compose our scene
 
     // Add a viewport
-    EntityPtr viewport(new Viewport(width, height));
+    EntityPtr stage(new Stage(width, height, m_Joystick ));
     // this entity renders
-    renderer->AddEntity(viewport);
+    renderer->AddEntity(stage);
     // listen to resize events
-    m_EntityEventHandlerList.push_back( viewport );
-
-    // Add the camera
-    EntityPtr camera(new Camera(m_Joystick));
-    // this entity handles events
-    m_EntityEventHandlerList.push_back( camera );
-    // this entity renders
-    viewport->AddEntity(camera, 0);
-
-    {
-        EntityPtr cube( new Cube( ) );
-        cube->GetRenderState()->Translate( Vector(-4.0, 3, 0), Vector(1.0f, 1.0f, 1.0f) );
-        cube->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
-        // this entity renders
-        camera->AddEntity(cube, 20 );
-    }
-    {
-        EntityPtr e( new Sphere( ) );
-        e->GetRenderState()->Translate( Vector(-0.0, 2, 0), Vector(1.0f, 1.0f, 1.0f) );
-        e->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
-        // this entity renders
-        camera->AddEntity(e, 20 );
-    }
-    {
-        EntityPtr e( new Cylinder( ) );
-        e->GetRenderState()->Translate( Vector(4.0, 2.5, 0), Vector(1.0f, 0.3f, 1.0f) );
-        e->GetRenderState()->Rotate( Vector( 20.0f, -20.0f, 0.0f ) );
-        // this entity renders
-        camera->AddEntity(e, 20 );
-    }
+    m_EntityEventHandlerList.push_back( stage );
 
     // some custom event handler
 //    m_EventHandlerList.push_back( boost::bind( &OnHandleEvent, _1, water ) );
@@ -164,7 +130,13 @@ void App::Init(int argc, char* argv[])
     int err = SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK);
     ASSERT( err != -1, "Failed to initialize SDL video system! SDL Error: %s\n", SDL_GetError());
 
-    atexit(SDL_Quit);
+//    atexit(SDL_Quit);
+
+    int numJoysticks = SDL_NumJoysticks();
+    if ( numJoysticks > 0 ) {
+        m_Joystick = SDL_JoystickOpen(0);
+        SDL_JoystickEventState(SDL_ENABLE);
+    }
 
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
@@ -198,12 +170,6 @@ void App::Init(int argc, char* argv[])
     //  SDL_WM_SetIcon( pei::SDL::SurfaceRef( pei::LogoBrush ), NULL );
     //	SDL_ShowCursor(SDL_DISABLE);
     //	SDL_EnableUNICODE(1);
-
-    int numJoysticks = SDL_NumJoysticks();
-    if ( numJoysticks > 0 ) {
-        m_Joystick = SDL_JoystickOpen(0);
-        SDL_JoystickEventState(SDL_ENABLE);
-    }
 }
 
 int App::Run()
@@ -296,4 +262,3 @@ int App::Run()
 
     return r;
 }
-

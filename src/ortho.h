@@ -31,10 +31,18 @@ private:
         , m_ClearColor(0.25f, 0.25f, 0.25f, 1.0f )
         {
         }
+
+        void Set( int x, int y, int width, int height )
+        {
+            m_XPos  = x;
+            m_YPos  = y;
+            m_Width = width;
+            m_Height= height;
+        }
     } *m_RenderStateProxy;
 
 public:
-    Ortho( int x, int y, int width, int height );
+    Ortho( int x = 0, int y = 0, int width = 0, int height = 0 );
 
     virtual ~Ortho();
 
@@ -44,8 +52,18 @@ public:
 
     int GetHeight() const;
 
+    void Set( int x, int y, int width, int height );
+
+    void SetSize( int width, int height );
+
     virtual void Render( int pass ) throw(std::exception);
 
+protected:
+    virtual bool DoInitialize( Renderer* renderer ) throw(std::exception);
+
+    virtual void DoRender( int pass ) throw(std::exception) {}
 };
+
+typedef boost::shared_ptr< Ortho > OrthoPtr;
 
 #endif /* ORTHO_H_ */

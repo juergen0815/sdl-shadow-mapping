@@ -84,7 +84,7 @@ void Viewport::Render( int pass ) throw(std::exception)
 
     // set perspective viewing frustum
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf( m_RenderStateProxy->m_Projection );
+    glLoadMatrixf( m_RenderStateProxy->GetProjectionMatrix() );
 
     // switch to modelview matrix in order to set scene
     glMatrixMode(GL_MODELVIEW);
@@ -120,25 +120,13 @@ bool Viewport::DoInitialize( Renderer* renderer ) throw(std::exception)
     glPushMatrix();
     glLoadIdentity();
     m_RenderStateProxy->m_Frustum.Set();
-    glGetFloatv( GL_PROJECTION_MATRIX, (float*)m_RenderStateProxy->m_Projection );
+    glGetFloatv( GL_PROJECTION_MATRIX, (float*)m_RenderStateProxy->GetProjectionMatrix() );
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
     return true;
 }
-//
-//bool Viewport::HandleEvent(const SDL_Event& event)
-//{
-//    switch (event.type) {
-//    case SDL_VIDEORESIZE:
-//        // TODO: - use a relative size to screen - or do not handle event here
-//        m_RenderStateProxy->m_Frustum.Calculate( event.resize.w, event.resize.h );
-//        break;
-//    default: break;
-//    }
-//    return false;
-//}
 
 void Viewport::SetClearColor( const Vector& col )
 {

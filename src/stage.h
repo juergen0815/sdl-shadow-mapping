@@ -11,25 +11,36 @@
 #include "err.h"
 #include "entity.h"
 
+#include "viewport.h"
+#include "ortho.h"
+#include "camera.h"
+#include "world.h"
+#include "framebuffer.h"
+
 class Stage : public Entity
 {
 public:
-    enum enRENDER_PASS {
-        PASS_SHADOW_MAP = 0, // render shadow map
-        PASS_LIGHTING   = 1, // render regular pass (incl. lighting)
-        PASS_SHADOW_TEST= 2, // combine shadow map
 
-        NUM_PASSES
-    };
-    enum enRENDER_PASS_F {
-        PASS_SHADOW_MAP_F = 1<<PASS_SHADOW_MAP,  // render shadow map
-        PASS_LIGHTING_F   = 1<<PASS_LIGHTING,    // render regular pass (incl. lighting)
-        PASS_SHADOW_TEST_F= 1<<PASS_SHADOW_TEST, // combine shadow map
-    };
 private:
+    OrthoPtr    m_Overlay;          // a generic overlay (hud or what ever)
 
+    // That's our stage. One main, and 2 side stages
+    // +----------+---+
+    // |1 Main    | 2 | ShadowMap
+    // |          +---+
+    // |          | 3 | Lighting only
+    // +----------+---+
+
+    ViewportPtr m_MainStage;        // main stage - the combined image incl. shadow
+    OrthoPtr    m_ShadowMapStage;   // a viewport to display the shado map texture (as an grey scale image)
+    ViewportPtr m_LightingStage;    // default lit side stage - no shadows
+
+    CameraPtr   m_Camera;           // Once camera for main stage
+    WorldPtr    m_World;            // this is the world we want to render
+
+    FrameBuffer m_ShadowMap;        // we render our "world" into a offscreen depth buffer
 public:
-    Stage();
+    Stage( int w, int h, SDL_Joystick* joystick );
 
     virtual ~Stage();
 
