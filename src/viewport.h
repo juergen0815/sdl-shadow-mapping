@@ -11,15 +11,18 @@
 #include "err.h"
 #include "entity.h"
 
+#include <GL/glew.h>
+
 struct Frustum
 {
-    float m_Fov;
-    float m_ZNear,m_ZFar;
+    float   m_Fov;
+    float   m_ZNear,m_ZFar;
 
-    float m_Left;
-    float m_Right;
-    float m_Bottom;
-    float m_Top;
+    float   m_Left;
+    float   m_Right;
+    float   m_Bottom;
+    float   m_Top;
+    Matrix  m_Matrix;
 
     Frustum( float fov = 60.0f, float zNear = 1.0f, float zFar = 100.0f );
 
@@ -49,9 +52,10 @@ private:
         , m_Width(width)
         , m_Height(height)
         , m_ClearColor(0.25f, 0.25f, 0.25f, 1.0f )
-        , m_ClearFlags(0)
+        , m_ClearFlags(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         {
             m_Frustum.Calculate( width, height );
+            // TODO:
         }
 
         void Set( int x, int y, int width, int height )

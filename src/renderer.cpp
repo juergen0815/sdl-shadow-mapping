@@ -214,6 +214,19 @@ void Renderer::InitGL()
     glEnable(GL_ALPHA_TEST);
     glEnable(GL_BLEND);
 
+    GLfloat lightKa[] = {.2f, .2f, .2f, 1.0f};  // ambient light
+    GLfloat lightKd[] = {.7f, .7f, .7f, 1.0f};  // diffuse light
+    GLfloat lightKs[] = {  1,   1,   1,    1};  // specular light
+    glLightfv(GL_LIGHT0, GL_AMBIENT, lightKa);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightKd);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, lightKs);
+
+    // position the light
+    float lightPos[4] = {0, 0, 30, 0}; // positional light
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+    glEnable(GL_LIGHT0);                        // MUST enable each light source after configuration
+
     // background color
     glClearColor(0, 0, 0, 0);
     // clear all buffers
@@ -282,6 +295,13 @@ void Renderer::Run()
                 }
                 ++doUpdate;
             }
+
+            glClearColor( m_ClearColor[ Vector::R ],
+                          m_ClearColor[ Vector::G ],
+                          m_ClearColor[ Vector::B ],
+                          m_ClearColor[ Vector::A ]);
+            // clear buffer
+            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
             // run list
             for( auto& entity : m_RenderList ) {

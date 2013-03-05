@@ -14,19 +14,39 @@
 World::World()
     : m_IsInitialized(false)
 {
+    LightPtr light( new Light );
+    light->GetRenderState()->Translate( Vector( 0, 5, 0 ) );
+//    AddLight( light );
 
+    // setup the scene
+    {
+        EntityPtr e( new Cube( ) );
+        e->GetRenderState()->Translate( Vector(-4.0, 1, 0), Vector(1.0f, 1.0f, 1.0f) );
+        e->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
+        AddEntity(e, 20 );
+    }
+    {
+        EntityPtr e( new Sphere( ) );
+        e->GetRenderState()->Translate( Vector(-0.0, 0, 0), Vector(1.0f, 1.0f, 1.0f) );
+        e->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
+        AddEntity(e, 20 );
+    }
+    {
+        EntityPtr e( new Cylinder( ) );
+        e->GetRenderState()->Translate( Vector(4.0, 0.5, 0), Vector(1.0f, 0.3f, 1.0f) );
+        e->GetRenderState()->Rotate( Vector( 20.0f, -20.0f, 0.0f ) );
+        AddEntity(e, 20 );
+    }
 }
 
 World::~World()
 {
-
 }
 
 void World::AddLight( LightPtr light )
 {
     m_Lights.push_back( light );
-    // we still need to "render" and transform this light
-    AddEntity( light );
+    AddEntity( light, 0 );
 }
 
 const World::LightList& World::GetLights() const
@@ -34,42 +54,53 @@ const World::LightList& World::GetLights() const
     return m_Lights;
 }
 
-bool World::DoInitialize( Renderer* renderer ) throw( std::exception )
+bool World::Initialize( Renderer* renderer ) throw(std::exception)
 {
+    bool r(false);
     // we will connect this world to multiple view ports, but only initialize it once!
     if ( !m_IsInitialized ) {
         m_IsInitialized = true;
-
-        // setup the scene
-        {
-            EntityPtr e( new Cube( ) );
-            e->GetRenderState()->Translate( Vector(-4.0, 3, 0), Vector(1.0f, 1.0f, 1.0f) );
-            e->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
-            AddEntity(e, 20 );
-        }
-        {
-            EntityPtr e( new Sphere( ) );
-            e->GetRenderState()->Translate( Vector(-0.0, 2, 0), Vector(1.0f, 1.0f, 1.0f) );
-            e->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
-            AddEntity(e, 20 );
-        }
-        {
-            EntityPtr e( new Cylinder( ) );
-            e->GetRenderState()->Translate( Vector(4.0, 2.5, 0), Vector(1.0f, 0.3f, 1.0f) );
-            e->GetRenderState()->Rotate( Vector( 20.0f, -20.0f, 0.0f ) );
-            AddEntity(e, 20 );
-        }
-
-        LightPtr light( new Light );
-        light->GetRenderState()->Translate( Vector( 0, 0, 20 ) );
-        AddLight( light );
+        r = Entity::Initialize(renderer);
     }
-    return true;
+    return r;
+}
+
+bool World::DoInitialize( Renderer* renderer ) throw( std::exception )
+{
+    bool r(true);
+    // transform/render all lights
+    for ( auto& light : m_Lights ) {
+//        r &= light->Initialize( renderer );
+    }
+    return r;
+}
+
+void World::RenderSubTree( int pass ) throw( std::exception )
+{
+    // no more transformation, etc.
+
+    // Transform/Render lights before children
+    DoRender( pass );
+
+    // render all children
+    for( auto it = m_RenderList.begin(); it != m_RenderList.end(); ) {
+        EntityPtr entity = *it;
+        if ( entity->IsFlagSet( Entity::F_ENABLE|Entity::F_VISIBLE ) &&
+            !entity->IsFlagSet( Entity::F_DELETE ) )
+        {
+            // don't bother rendering if we are marked for deletion
+            entity->Render( pass );
+        }
+        ++it;
+    }
 }
 
 void World::DoRender( int pass ) throw( std::exception )
 {
-
+    // transform/render all lights
+    for ( auto& light : m_Lights ) {
+//        light->Render( pass );
+    }
 }
 
 

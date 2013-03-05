@@ -9,8 +9,17 @@
 #include "app.h"
 #include "renderer.h"
 #include "stage.h"
-
 #include "brushloader.h"
+
+#include "world.h"
+#include "surface.h"
+#include "cube.h"
+#include "sphere.h"
+#include "cylinder.h"
+#include "camera.h"
+
+#include "viewport.h"
+#include "ortho.h"
 
 #include <SDL/SDL.h>
 
@@ -36,13 +45,27 @@ App::~App()
 }
 
 // example of generic event handler
-bool OnHandleEvent( const SDL_Event& event, EntityPtr c1 )
+bool OnHandleEvent( const SDL_Event& event, EntityPtr c1, EntityPtr c2, EntityPtr c3  )
 {
     ASSERT( c1 , "No entities in event handler!" );
 
     bool processed(false);
     switch (event.type)
     {
+    case SDL_VIDEORESIZE: {
+        ViewportPtr vp = boost::dynamic_pointer_cast<Viewport>(c1);
+        if ( vp ) {
+            vp->SetSize(event.resize.w * 0.80, event.resize.h);
+        }
+        vp = boost::dynamic_pointer_cast<Viewport>(c2);
+        if ( vp ) {
+            vp->Set(event.resize.w * 0.8, 0, event.resize.w * 0.2, event.resize.h*0.5);
+        }
+        OrthoPtr ortho = boost::dynamic_pointer_cast<Ortho>(c3);
+        if ( ortho ) {
+            ortho->Set(event.resize.w * 0.8, 0, event.resize.w * 0.2, event.resize.h*0.5);
+        }
+        } break;
     case SDL_KEYDOWN:
         switch (event.key.keysym.sym)
         {
@@ -113,16 +136,74 @@ void App::InitScene( int width, int height )
 
     ////////////////////////////////////////////////////////////////////////////
     // Compose our scene
-
+#if 0
     // Add a viewport
     EntityPtr stage(new Stage(width, height, m_Joystick ));
     // this entity renders
     renderer->AddEntity(stage);
     // listen to resize events
     m_EntityEventHandlerList.push_back( stage );
+#else
+    WorldPtr world( new World );
+
+    ViewportPtr viewport2(new Viewport(width * 0.8, 0, width* 0.2, height*0.5));
+    viewport2->SetClearFlags(0);
+    renderer->AddEntity(viewport2);
+
+    OrthoPtr ortho(new Ortho(width * 0.8, 0, width* 0.2, height*0.5));
+    renderer->AddEntity(ortho );
+
+    // Add a viewport
+    ViewportPtr viewport(new Viewport(width * 0.8, height));
+    viewport->SetClearFlags(0);
+    renderer->AddEntity(viewport);
+
+    // Add the camera
+    EntityPtr camera(new Camera(m_Joystick));
+    // this entity handles events
+    m_EntityEventHandlerList.push_back( camera );
+
+    camera->AddEntity( world );
+    // this viewport has a camera
+    viewport->AddEntity(camera, 0);
+
+    // this one does not
+    viewport2->GetRenderState()->Translate( Vector( 0, 0, -10 ) );
+    viewport2->AddEntity(world, 0);
+
+    // and this is a 2D projection
+    ortho->GetRenderState()->Translate( Vector( 0, 0, 0 ), Vector( 1, 1, 1 ) );
+    ortho->AddEntity( world );
 
     // some custom event handler
-//    m_EventHandlerList.push_back( boost::bind( &OnHandleEvent, _1, water ) );
+    m_EventHandlerList.push_back( boost::bind( &OnHandleEvent, _1, viewport, viewport2, ortho ) );
+
+#if 0
+    LightPtr light( new Light );
+    light->GetRenderState()->Translate( Vector( 0, 0, 20 ) );
+    viewport->AddEntity( light, 0 );
+
+    // setup the scene
+    {
+        EntityPtr e( new Cube( ) );
+        e->GetRenderState()->Translate( Vector(-4.0, 3, 0), Vector(1.0f, 1.0f, 1.0f) );
+        e->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
+        camera->AddEntity(e, 20 );
+    }
+    {
+        EntityPtr e( new Sphere( ) );
+        e->GetRenderState()->Translate( Vector(-0.0, 2, 0), Vector(1.0f, 1.0f, 1.0f) );
+        e->GetRenderState()->Rotate( Vector(10.0f, 10.0f, 0.0f ) );
+        camera->AddEntity(e, 20 );
+    }
+    {
+        EntityPtr e( new Cylinder( ) );
+        e->GetRenderState()->Translate( Vector(4.0, 2.5, 0), Vector(1.0f, 0.3f, 1.0f) );
+        e->GetRenderState()->Rotate( Vector( 20.0f, -20.0f, 0.0f ) );
+    }
+#endif
+
+#endif
 }
 
 void App::Init(int argc, char* argv[])

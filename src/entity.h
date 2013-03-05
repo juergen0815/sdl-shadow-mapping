@@ -105,6 +105,8 @@ protected:
 
     virtual void DoUpdate( float ticks ) throw(std::exception) {};
 
+    virtual void RenderSubTree( int pass ) throw( std::exception );
+
     friend class Renderer;
 };
 

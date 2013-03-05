@@ -28,11 +28,15 @@ public:
 
     void AddLight( LightPtr light );
 
+    virtual bool Initialize( Renderer* renderer ) throw(std::exception);
+
     const LightList& GetLights() const;
 protected:
     virtual bool DoInitialize( Renderer* renderer ) throw( std::exception );
 
     virtual void DoRender( int pass ) throw( std::exception );
+
+    virtual void RenderSubTree( int pass ) throw( std::exception );
 
 };
 

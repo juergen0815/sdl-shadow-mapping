@@ -17,26 +17,21 @@ Stage::Stage( int width, int height, SDL_Joystick* joystick )
     , m_World( new World )
     , m_ShadowMap( FrameBuffer::F_ENABLE_DEPTH_BUFFER_F ) // depth buffer only!
 {
-    // camera is attached to main stage
-    m_MainStage->AddEntity( m_Camera );
-    m_MainStage->SetClearFlags(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_Camera->AddEntity( m_World );
 
-    m_LightingStage->AddEntity( m_World );
-    m_LightingStage->SetClearFlags(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // camera is attached to main stage
+    m_MainStage->AddEntity( m_Camera );
+    m_MainStage->SetClearColor( Vector(1.0, 0.0, 0.0, 1.0 ) );
+    m_MainStage->SetClearFlags(0);
 
-    // MainStage covers left portion to 80%
-    float w = float(width) * 0.8f;
-    float h = float(height);
-    m_MainStage->SetSize( w, h );
-    // Right top half is shadow map
-    float x = w; w = width - w;
-    float y = 0;
-    h *= 0.5f;
-    m_ShadowMapStage->Set( x, y, w, h );
-    // right bottom half is non-shadowed scene
-    y += h;
-    m_LightingStage->Set( x, y, w, h );
+    m_LightingStage->AddEntity( m_World );
+    m_LightingStage->SetClearColor( Vector(1.0, 1.0, 0.0, 1.0 ) );
+    m_LightingStage->SetClearFlags(0);
+
+    m_ShadowMapStage->SetClearColor( Vector(0.0, 1.0, 0.0, 1.0 ) );
+    m_ShadowMapStage->SetClearFlags(0);
+
+    OnResize( width, height );
 }
 
 Stage::~Stage()
@@ -73,8 +68,12 @@ void Stage::Render( int pass ) throw(std::exception)
     int lighting(false);
     glGetIntegerv(GL_LIGHTING, &lighting );
 
-    glClearColor( 0, 0, 0, 0 ); // background color
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW); // not sure how much overhead this generates
+    glPushMatrix();
+    glMultMatrixf( GetRenderState()->GetMatrix() );
+
+//    glClearColor( 0, 0, 0, 0 ); // background color
+//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // use a lookup table so we can actually reorder these if needed, or add new, or w/e
     int renderPasses[] = {
@@ -133,7 +132,10 @@ void Stage::Render( int pass ) throw(std::exception)
             // default lighting pass - render whole scene
             if ( !lighting ) glEnable(GL_LIGHTING);
             m_MainStage->Render( p );
+            // Render lighting "window"
             m_LightingStage->Render( p );
+            // render shadow map into 2D window
+            m_ShadowMapStage->Render( PASS_LIGHTING );
             break;
         case PASS_SHADOW_TEST:
             // render shadows from shadow map into scene
@@ -144,13 +146,13 @@ void Stage::Render( int pass ) throw(std::exception)
 
     } while (++renderPass < numPasses );
 
-    // render shadow map into 2D window
-    m_ShadowMapStage->Render( PASS_LIGHTING );
 
     // render overlay
-    m_Overlay->Render( PASS_LIGHTING );
+//    m_Overlay->Render( PASS_LIGHTING );
 
     if ( !lighting ) glDisable(GL_LIGHTING);
+
+    glPopMatrix();
 }
 
 void Stage::DoRender( int pass ) throw( std::exception )
@@ -158,29 +160,32 @@ void Stage::DoRender( int pass ) throw( std::exception )
     // not really much to do here. This would be used if the stage would want to render something (like, hub, or info or w/e)
 }
 
+void Stage::OnResize( int width, int height )
+{
+    m_Overlay->Set(0,0,width, height);
+
+    // MainStage covers left portion to 80%
+    float w = float(width) * 0.8f;
+    float h = float(height);
+    m_MainStage->SetSize( w, h );
+    // Right top half is shadow map
+    float x = w; w = width - w;
+    float y = 0;
+    h *= 0.5;
+    m_ShadowMapStage->Set( x, y, w, h );
+    // right bottom half is non-shadowed scene
+    y += h;
+    m_LightingStage->Set( x, y, w, h );
+
+}
+
 bool Stage::HandleEvent( const SDL_Event& event )
 {
     bool eventHandled(false);
     switch (event.type) {
-    case SDL_VIDEORESIZE: {
-        // TODO: resize our viewports
-        // Resize the three stages:
-        // event.resize.w
-        m_Overlay->Set(0,0,event.resize.w, event.resize.h);
-
-        // MainStage covers left portion to 80%
-        float w = float(event.resize.w) * 0.8f;
-        float h = float(event.resize.h);
-        m_MainStage->SetSize( w * 0.8f, h );
-        // Right top half is shadow map
-        float x = w; w = event.resize.w - w;
-        float y = 0;
-        h += 0.5;
-        m_ShadowMapStage->Set( x, y, w, h );
-        // right bottom half is non-shadowed scene
-        y += h;
-        m_LightingStage->Set( x, y, w, h );
-        } break;
+    case SDL_VIDEORESIZE:
+        OnResize(event.resize.w, event.resize.h);
+        break;
     default:
         break;
     }
@@ -189,4 +194,3 @@ bool Stage::HandleEvent( const SDL_Event& event )
     }
     return eventHandled;
 }
-

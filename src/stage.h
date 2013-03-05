@@ -55,6 +55,7 @@ protected:
 
     virtual void DoRender( int pass ) throw( std::exception );
 
+    void OnResize( int w, int h );
 };
 
 

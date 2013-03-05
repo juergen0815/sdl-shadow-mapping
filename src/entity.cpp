@@ -64,10 +64,11 @@ bool Entity::Update( float ticks ) throw(std::exception)
 void Entity::Render( int pass ) throw(std::exception)
 {
     // if regular mode do transform, if replay read & load projection matrix from render state
+    glMatrixMode(GL_MODELVIEW); // not sure how much overhead this generates
     glPushMatrix();
     glMultMatrixf( GetRenderState()->GetMatrix() );
-    // store projection matrix
-//    glGetFloatv( GL_PROJECTION_MATRIX, (float*)GetRenderState()->GetProjectionMatrix() );
+    // store "projected" matrix - not the projection matrix!!!
+//    glGetFloatv( GL_MODELVIEW_MATRIX, (float*)GetRenderState()->GetProjectionMatrix() );
 
     uint32_t flags = GetRenderState()->GetFlags();
 
@@ -96,6 +97,19 @@ void Entity::Render( int pass ) throw(std::exception)
         glDisable(GL_BLEND);
     }
 
+    RenderSubTree( pass );
+
+    if (!alphaEnabled && (flags & RenderState::ALPHA_F) )
+    {
+        glBlendFunc( glBlendSrc, glBlendDst);
+    }
+    glPopMatrix();
+}
+
+void Entity::RenderSubTree( int pass ) throw( std::exception )
+{
+    // no more transformation, etc.
+
     // render all children
     for( auto it = m_RenderList.begin(); it != m_RenderList.end(); ) {
         EntityPtr entity = *it;
@@ -108,13 +122,8 @@ void Entity::Render( int pass ) throw(std::exception)
         ++it;
     }
     DoRender( pass );
-
-    if (!alphaEnabled && (flags & RenderState::ALPHA_F) )
-    {
-        glBlendFunc( glBlendSrc, glBlendDst);
-    }
-    glPopMatrix();
 }
+
 
 void Entity::CheckDestroy( ) throw(std::exception)
 {

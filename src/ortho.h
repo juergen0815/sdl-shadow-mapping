@@ -21,6 +21,7 @@ private:
         int     m_YPos;
         int     m_Width;
         int     m_Height;
+        unsigned int m_ClearFlags;
         Vector  m_ClearColor;
 
         RenderState( int x, int y, int width, int height )
@@ -28,6 +29,7 @@ private:
         , m_YPos(y)
         , m_Width(width)
         , m_Height(height)
+        , m_ClearFlags(0)
         , m_ClearColor(0.25f, 0.25f, 0.25f, 1.0f )
         {
         }
@@ -57,6 +59,8 @@ public:
     void SetSize( int width, int height );
 
     virtual void Render( int pass ) throw(std::exception);
+
+    void SetClearFlags( unsigned int clearFlags ) { m_RenderStateProxy->m_ClearFlags = clearFlags; }
 
 protected:
     virtual bool DoInitialize( Renderer* renderer ) throw(std::exception);

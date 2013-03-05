@@ -8,8 +8,6 @@
 
 #include "viewport.h"
 
-#include <GL/glew.h>
-
 Frustum::Frustum( float fov /*= 60.0f */, float zNear /* = 1.0f */, float zFar /* = 100.0f */ )
     : m_Fov( fov )
     , m_ZNear( zNear )
@@ -24,7 +22,17 @@ Frustum::Frustum( float fov /*= 60.0f */, float zNear /* = 1.0f */, float zFar /
 
 void Frustum::Set()
 {
+    // TODO: Manually calculate frustum matrix - this here depends on the current gl context
+
+    // Set projection frustum
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    // generate frustum matrix
     glFrustum( m_Left, m_Right, m_Bottom, m_Top, m_ZNear, m_ZFar );
+    // store in render-state projection matrix
+    glGetFloatv( GL_PROJECTION_MATRIX, (float*)m_Matrix );
+    glPopMatrix();
 }
 
 void Frustum::Calculate( int w, int h )
@@ -80,17 +88,18 @@ void Viewport::Render( int pass ) throw(std::exception)
     Matrix projection;
     glGetFloatv( GL_PROJECTION_MATRIX, (float*)projection );
 
-    // Only 3D we do not care about overlays - just yet
     glViewport( m_RenderStateProxy->m_XPos, m_RenderStateProxy->m_YPos,
                 (GLsizei)m_RenderStateProxy->m_Width, (GLsizei)m_RenderStateProxy->m_Height);
 
     // set perspective viewing frustum
     glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf( m_RenderStateProxy->GetProjectionMatrix() );
+    glLoadMatrixf( (float*)m_RenderStateProxy->m_Frustum.m_Matrix );
 
     // switch to modelview matrix in order to set scene
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    // if regular mode do transform, if replay read & load projection matrix from render state
+    glMultMatrixf( GetRenderState()->GetMatrix() );
 
     // use a flag to enable clear color / and clear flags
     if ( m_RenderStateProxy->m_ClearFlags ) {
@@ -103,6 +112,8 @@ void Viewport::Render( int pass ) throw(std::exception)
         // clear buffer
         glClear( m_RenderStateProxy->m_ClearFlags );
     }
+
+
     // apply local viewport and render children
     Entity::Render( pass );
 
@@ -118,15 +129,8 @@ void Viewport::Render( int pass ) throw(std::exception)
 
 bool Viewport::DoInitialize( Renderer* renderer ) throw(std::exception)
 {
-    // static frustum. Calc only once
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
+    // generate frustum matrix
     m_RenderStateProxy->m_Frustum.Set();
-    glGetFloatv( GL_PROJECTION_MATRIX, (float*)m_RenderStateProxy->GetProjectionMatrix() );
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
 
     glClearColor( m_RenderStateProxy->m_ClearColor[ Vector::R ],
                   m_RenderStateProxy->m_ClearColor[ Vector::G ],

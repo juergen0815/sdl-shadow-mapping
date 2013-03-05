@@ -50,6 +50,8 @@ private:
 	float       m_TimeBase;
 	int         m_Pause;
 
+	Vector      m_ClearColor;
+
 	boost::unordered_map< long, UpdateFunction > m_Updaters;
 public:
 	Renderer();
