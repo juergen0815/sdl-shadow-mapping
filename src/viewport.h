@@ -40,6 +40,7 @@ private:
         int     m_Width;
         int     m_Height;
         Vector  m_ClearColor;
+        unsigned int m_ClearFlags;
         Frustum m_Frustum;
 
         RenderState( int x, int y, int width, int height )
@@ -48,6 +49,7 @@ private:
         , m_Width(width)
         , m_Height(height)
         , m_ClearColor(0.25f, 0.25f, 0.25f, 1.0f )
+        , m_ClearFlags(0)
         {
             m_Frustum.Calculate( width, height );
         }
@@ -79,6 +81,8 @@ public:
     int GetWidth() const { return m_RenderStateProxy->m_Width; }
 
     int GetHeight() const { return m_RenderStateProxy->m_Height; }
+
+    void SetClearFlags( unsigned int clearFlags ) { m_RenderStateProxy->m_ClearFlags = clearFlags; }
 
     virtual void Render( int pass ) throw(std::exception);
 private:

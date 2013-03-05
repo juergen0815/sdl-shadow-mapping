@@ -30,8 +30,8 @@ public:
 
     virtual ~Camera();
 
-private:
     virtual bool HandleEvent( const SDL_Event& event ); // -> ?? override; not working
+private:
 
     virtual bool DoInitialize( Renderer* renderer ) throw( std::exception );
 

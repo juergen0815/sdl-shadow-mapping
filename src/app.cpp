@@ -164,7 +164,7 @@ void App::Init(int argc, char* argv[])
     int vsync = 1;  // 0 = novsync
     SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, vsync);
 
-    SDL_WM_SetCaption("SDL Multi Texture", NULL);
+    SDL_WM_SetCaption("SDL Shadowmap", NULL);
     SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 
     //  SDL_WM_SetIcon( pei::SDL::SurfaceRef( pei::LogoBrush ), NULL );

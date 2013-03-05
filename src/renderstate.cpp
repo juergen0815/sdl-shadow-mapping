@@ -50,7 +50,7 @@ const Matrix& RenderState::GetProjectionMatrix() const
 
 RenderState& RenderState::Project()
 {
-    m_Projection *= m_Matrix;
+    m_Projection.Mul( m_Matrix );
     return *this;
 }
 

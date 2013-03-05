@@ -67,7 +67,7 @@ void Entity::Render( int pass ) throw(std::exception)
     glPushMatrix();
     glMultMatrixf( GetRenderState()->GetMatrix() );
     // store projection matrix
-    glGetFloatv( GL_PROJECTION_MATRIX, (float*)GetRenderState()->GetProjectionMatrix() );
+//    glGetFloatv( GL_PROJECTION_MATRIX, (float*)GetRenderState()->GetProjectionMatrix() );
 
     uint32_t flags = GetRenderState()->GetFlags();
 

@@ -34,7 +34,7 @@ private:
     Vector      m_ColorFrom,
                 m_ColorTo;
 public:
-    Cylinder(  float length = 1.0f );
+    Cylinder( float length = 1.0f );
 
     virtual ~Cylinder();
 

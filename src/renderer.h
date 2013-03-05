@@ -15,6 +15,12 @@
 #include <boost/function.hpp>
 #include <boost/unordered_map.hpp>
 
+#include <GL/glew.h>
+#ifdef __linux__
+#include <GL/glx.h>
+#endif
+#include <SDL/SDL_syswm.h>
+
 typedef boost::function<bool(float)> UpdateFunction;
 
 class Renderer : public Worker
@@ -37,6 +43,9 @@ private:
 #ifdef _WIN32
 	HGLRC       m_CurrentContext;
 	HDC         m_CurrentDC;
+#endif
+#ifdef __linux__
+	GLXContext   m_CurrentContext;
 #endif
 	float       m_TimeBase;
 	int         m_Pause;

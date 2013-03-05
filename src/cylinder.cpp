@@ -13,7 +13,7 @@ const int _rows    = 2;
 #define M_PI 3.14159265358979323846
 #endif
 
-Cylinder::Cylinder( )
+Cylinder::Cylinder( float length /* = 1.0f */ )
     : m_Buffers( { -1 } )
     , m_Stride(1) // needed if/when we pack color + vertex into one array
     , m_VertexBuffer( _columns*_rows*m_Stride )    // use the same memory pool for vertex and texture coords

@@ -9,6 +9,8 @@
 
 #include "GL/glew.h"
 
+#include <SDL/SDL.h>
+
 Ortho::Ortho( int x, int y, int width, int height )
     : m_RenderStateProxy( new RenderState(x,y,width,height) )
 {
@@ -54,16 +56,38 @@ void Ortho::Render( int pass ) throw(std::exception)
     Matrix projection;
     glGetFloatv( GL_PROJECTION_MATRIX, (float*)projection );
 
-    int lighting(false);
+    int lighting;
     glGetIntegerv(GL_LIGHTING, &lighting );
+    if ( lighting ) glDisable( GL_LIGHTING );
 
-    glDisable( GL_LIGHTING );
-    // clear depth buffer
-    glClear(GL_DEPTH_BUFFER_BIT);
+    int depthTest;
+    glGetIntegerv(GL_DEPTH_TEST, &depthTest );
+    if ( depthTest ) glDisable( GL_DEPTH_TEST );
+
+    // Position from the top
+    const SDL_VideoInfo* info = SDL_GetVideoInfo();
+    float screenHeight(info->current_h);
+    // need to get this from the screen
+    glViewport( m_RenderStateProxy->m_XPos, screenHeight - ( m_RenderStateProxy->m_YPos + m_RenderStateProxy->m_Height ),
+    		    m_RenderStateProxy->m_Width, m_RenderStateProxy->m_Height );
+
+    glMatrixMode( GL_PROJECTION );
+    glLoadIdentity();
+
+    // flip this upside down
+    float x0(m_RenderStateProxy->m_XPos);
+    float x1(m_RenderStateProxy->m_XPos+m_RenderStateProxy->m_Width-1);
+    float y0(m_RenderStateProxy->m_YPos+m_RenderStateProxy->m_Height-1);
+    float y1(m_RenderStateProxy->m_YPos);
+    glOrtho( x0, x1, y0, y1, -1000.0f, 1000.0f );
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
     Entity::Render( pass );
 
-    if ( lighting ) glEnable( GL_LIGHTING );
+    if ( lighting )  glEnable( GL_LIGHTING );
+    if ( depthTest ) glEnable( GL_DEPTH_TEST );
 
     // restore previous viewport
     glViewport(vp[0], vp[1], vp[2], vp[3]);

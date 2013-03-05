@@ -11,6 +11,8 @@
 
 #include <GL/glew.h>
 
+#include <boost/bind.hpp>
+
 static int sLightId = GL_LIGHT0;
 
 Light::Light()
@@ -41,6 +43,8 @@ bool Light::DoInitialize( Renderer* renderer ) throw(std::exception)
     glLightfv(m_RenderStateProxy->m_Index, GL_DIFFUSE,  m_RenderStateProxy->m_Diffuse);
     glLightfv(m_RenderStateProxy->m_Index, GL_SPECULAR, m_RenderStateProxy->m_Specular);
     glEnable(m_RenderStateProxy->m_Index);   // MUST enable each light source after configuration
+    // copy position into vector - might need to overwrite spot light - need to transform as well
+    m_RenderStateProxy->m_Position = &((const float*)m_RenderStateProxy->GetMatrix())[Matrix::POS_X];
 
     return true;
 }
@@ -48,12 +52,11 @@ bool Light::DoInitialize( Renderer* renderer ) throw(std::exception)
 void Light::DoRender( int pass ) throw(std::exception)
 {
     // transformed projectiopn matrix
-    Matrix projection;
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf( projection );
+    Matrix modelview;
+    glGetFloatv( GL_MODELVIEW_MATRIX, (float*)modelview );
 
     // copy position into vector - might need to overwrite spot light - need to transform as well
-    m_RenderStateProxy->m_Position = &projection.m[Matrix::POS_X];
+    m_RenderStateProxy->m_Position = &((const float*)modelview)[Matrix::POS_X];
 }
 
 void Light::DoUpdate( float ticks ) throw(std::exception)

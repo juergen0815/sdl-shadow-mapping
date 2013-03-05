@@ -31,13 +31,15 @@ void Frustum::Calculate( int w, int h )
 {
     static const float pi = 3.1415926535897932384626433832795f;
 
-    float aspect = float(w)/float(h);
-    float fH = -std::tan( m_Fov / 360.0f * pi ) * m_ZNear;
-    float fW = fH * aspect;
-    m_Left  = -fW;
-    m_Right =  fW;
-    m_Bottom= -fH;
-    m_Top   =  fH;
+    if ( w > 0 && h > 0 ) {
+        float aspect = float(w)/float(h);
+        float fH = std::tan( m_Fov / 360.0f * pi ) * m_ZNear;
+        float fW = fH * aspect;
+        m_Left  = -fW;
+        m_Right =  fW;
+        m_Bottom= -fH;
+        m_Top   =  fH;
+    }
 }
 
 Viewport::Viewport( int width, int height )
@@ -89,17 +91,18 @@ void Viewport::Render( int pass ) throw(std::exception)
     // switch to modelview matrix in order to set scene
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    // if we want to move this thing, we would need to multiply this here somehow...
 
-    glClearColor( m_RenderStateProxy->m_ClearColor[ Vector::R ],
-                  m_RenderStateProxy->m_ClearColor[ Vector::G ],
-                  m_RenderStateProxy->m_ClearColor[ Vector::B ],
-                  m_RenderStateProxy->m_ClearColor[ Vector::A ] );                   // background color
-
-    // This should not be in here
-    // clear buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
+    // use a flag to enable clear color / and clear flags
+    if ( m_RenderStateProxy->m_ClearFlags ) {
+        if ( m_RenderStateProxy->m_ClearFlags & GL_COLOR_BUFFER_BIT ) {
+            glClearColor( m_RenderStateProxy->m_ClearColor[ Vector::R ],
+                          m_RenderStateProxy->m_ClearColor[ Vector::G ],
+                          m_RenderStateProxy->m_ClearColor[ Vector::B ],
+                          m_RenderStateProxy->m_ClearColor[ Vector::A ]);
+        }
+        // clear buffer
+        glClear( m_RenderStateProxy->m_ClearFlags );
+    }
     // apply local viewport and render children
     Entity::Render( pass );
 
@@ -124,6 +127,11 @@ bool Viewport::DoInitialize( Renderer* renderer ) throw(std::exception)
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
+    glClearColor( m_RenderStateProxy->m_ClearColor[ Vector::R ],
+                  m_RenderStateProxy->m_ClearColor[ Vector::G ],
+                  m_RenderStateProxy->m_ClearColor[ Vector::B ],
+                  m_RenderStateProxy->m_ClearColor[ Vector::A ]);
 
     return true;
 }

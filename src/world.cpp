@@ -60,6 +60,9 @@ bool World::DoInitialize( Renderer* renderer ) throw( std::exception )
             AddEntity(e, 20 );
         }
 
+        LightPtr light( new Light );
+        light->GetRenderState()->Translate( Vector( 0, 0, 20 ) );
+        AddLight( light );
     }
     return true;
 }

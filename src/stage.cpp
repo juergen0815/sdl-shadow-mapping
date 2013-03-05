@@ -19,18 +19,20 @@ Stage::Stage( int width, int height, SDL_Joystick* joystick )
 {
     // camera is attached to main stage
     m_MainStage->AddEntity( m_Camera );
+    m_MainStage->SetClearFlags(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_Camera->AddEntity( m_World );
 
     m_LightingStage->AddEntity( m_World );
+    m_LightingStage->SetClearFlags(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // MainStage covers left portion to 80%
     float w = float(width) * 0.8f;
     float h = float(height);
-    m_MainStage->SetSize( w * 0.8f, h );
+    m_MainStage->SetSize( w, h );
     // Right top half is shadow map
     float x = w; w = width - w;
     float y = 0;
-    h += 0.5;
+    h *= 0.5f;
     m_ShadowMapStage->Set( x, y, w, h );
     // right bottom half is non-shadowed scene
     y += h;
@@ -45,6 +47,11 @@ Stage::~Stage()
 bool Stage::Initialize( Renderer* renderer ) throw(std::exception)
 {
     bool r = Entity::Initialize( renderer );
+
+    r &= m_MainStage->Initialize( renderer );
+    r &= m_ShadowMapStage->Initialize( renderer );
+    r &= m_LightingStage->Initialize( renderer );
+
     return r;
 }
 
@@ -66,13 +73,17 @@ void Stage::Render( int pass ) throw(std::exception)
     int lighting(false);
     glGetIntegerv(GL_LIGHTING, &lighting );
 
+    glClearColor( 0, 0, 0, 0 ); // background color
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     // use a lookup table so we can actually reorder these if needed, or add new, or w/e
-    int renderPasses[ NUM_PASSES ] = {
-            PASS_SHADOW_MAP,
+    int renderPasses[] = {
+//            PASS_SHADOW_MAP,
             PASS_LIGHTING,
-            PASS_SHADOW_TEST
+//            PASS_SHADOW_TEST
     };
     int renderPass(0);
+    int numPasses( sizeof(renderPasses)/sizeof(int));
     do {
 
         int p = renderPasses[renderPass];
@@ -90,7 +101,7 @@ void Stage::Render( int pass ) throw(std::exception)
                 m_ShadowMap.Enable();
 
                 // set viewport to texture size
-                glViewport( 0, 0, (GLsizei)m_ShadowMap.m_Width, (GLsizei)m_ShadowMap.m_Height);
+                glViewport( 0, 0, (GLsizei)m_ShadowMap.GetWidth(), (GLsizei)m_ShadowMap.GetHeight());
 
                 // set perspective viewing frustum - copy from main stage
                 glMatrixMode(GL_PROJECTION);
@@ -131,9 +142,13 @@ void Stage::Render( int pass ) throw(std::exception)
             break;
         }
 
-    } while (++renderPass < NUM_PASSES );
+    } while (++renderPass < numPasses );
 
-    m_Overlay->Render( 0 );
+    // render shadow map into 2D window
+    m_ShadowMapStage->Render( PASS_LIGHTING );
+
+    // render overlay
+    m_Overlay->Render( PASS_LIGHTING );
 
     if ( !lighting ) glDisable(GL_LIGHTING);
 }

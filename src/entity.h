@@ -51,14 +51,14 @@ public:
         PASS_LIGHTING_F   = 1<<PASS_LIGHTING,    // render regular pass (incl. lighting)
         PASS_SHADOW_TEST_F= 1<<PASS_SHADOW_TEST, // combine shadow map
     };
-private:
-    uint32_t m_Flags;
-    int      m_OrderNum;
-
-    RenderStatePtr m_RenderState;
 protected:
-    EntityList  m_RenderList;
-    EntityList  m_InitList;
+    uint32_t 		m_Flags;
+    int      		m_OrderNum;
+
+    RenderStatePtr 	m_RenderState;
+
+    EntityList  	m_RenderList;
+    EntityList  	m_InitList;
 public:
     Entity() throw ();
 

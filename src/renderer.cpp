@@ -18,8 +18,13 @@
 
 Renderer::Renderer()
 	: m_Terminate(false)
+#ifdef _WIN32
     , m_CurrentContext( nullptr )
     , m_CurrentDC( nullptr )
+#endif
+#ifdef __linux__
+	, m_CurrentContext( nullptr )
+#endif
     , m_TimeBase(1.0f)
     , m_Pause(1)
 {
@@ -31,11 +36,28 @@ Renderer::~Renderer()
 
 void Renderer::Init()
 {
+#ifdef _WIN32
     m_CurrentContext = wglGetCurrentContext();
     m_CurrentDC      = wglGetCurrentDC();
-
     // release current context
-    wglMakeCurrent( NULL, NULL );
+    wglMakeCurrent( nullptr, nullptr );
+#endif
+#ifdef __linux__
+    // Rendering works fine under X in a separate thread, but quitting breaks some SDL internals. Haven't figured it out yet.
+    if (!XInitThreads())
+    {
+    	THROW( "XLib is not thread safe." );
+    }
+    SDL_SysWMinfo wm_info;
+    SDL_VERSION( &wm_info.version );
+    if ( SDL_GetWMInfo( &wm_info ) ) {
+        Display *display = wm_info.info.x11.gfxdisplay;
+        m_CurrentContext = glXGetCurrentContext();
+        ASSERT( m_CurrentContext, "Error! No current GL context!" );
+        glXMakeCurrent( display, None, nullptr );
+        XSync( display, false );
+    }
+#endif
 }
 
 void Renderer::AddEntity( EntityPtr entity, int priority /*= 0*/  )
@@ -140,8 +162,20 @@ void Renderer::InitGL()
 {
     // This is important! Our renderer runs its own render thread
     // All
+#ifdef _WIN32
     wglMakeCurrent(m_CurrentDC,m_CurrentContext);
-
+#endif
+#ifdef __linux__
+    SDL_SysWMinfo wm_info;
+    SDL_VERSION( &wm_info.version );
+    if ( SDL_GetWMInfo( &wm_info ) ) {
+        // TODO: drag-n-drop for non win32
+        Display *display = wm_info.info.x11.gfxdisplay;
+        Window   window  = wm_info.info.x11.window;
+        glXMakeCurrent( display, window, m_CurrentContext );
+        XSync( display, false );
+    }
+#endif
     // Init GLEW - we need this to use OGL extensions (e.g. for VBOs)
     GLenum err = glewInit();
     ASSERT( GLEW_OK == err, "Error: %s\n", glewGetErrorString(err) );
@@ -164,6 +198,7 @@ void Renderer::InitGL()
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
     glEnable(GL_DEPTH_TEST);
+
 //    glEnable(GL_TEXTURE_2D);
 //    glEnable(GL_CULL_FACE);
 
@@ -175,11 +210,13 @@ void Renderer::InitGL()
     glClearDepth(1.0f);                         // 0 is near, 1 is far
     glDepthFunc(GL_LEQUAL);
 
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_ALPHA_TEST);
-    glEnable( GL_BLEND );
+    glEnable(GL_BLEND);
 
-    glClearColor(0, 0, 0, 0);                   // background color
+    // background color
+    glClearColor(0, 0, 0, 0);
+    // clear all buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
@@ -227,7 +264,7 @@ void Renderer::Run()
 
             // second step: If we added more than 1 entity, resort the render list
 
-            // only resort if we added more than one entity
+            // only resort if we added more than one new entity
             if ( resort > 0 ) {
                 m_RenderList.sort( boost::bind( &Renderer::CompareEntityPriorities, this, _1, _2) );
             }
@@ -245,12 +282,6 @@ void Renderer::Run()
                 }
                 ++doUpdate;
             }
-
-            // No Scene graph, no nested objects, no tree...must unroll in reverse order (see below)
-            // DONT DO THIS. Just to keep it simple! Use a scene graph instead!
-
-            // TODO: Render shadow map
-            //       We will need multiple passes here.
 
             // run list
             for( auto& entity : m_RenderList ) {
