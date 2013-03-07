@@ -68,7 +68,7 @@ void Ortho::Render( int pass ) throw(std::exception)
     // Position from the top
     const SDL_VideoInfo* info = SDL_GetVideoInfo();
     float screenHeight(info->current_h);
-    // need to get this from the screen
+    // make top the 0 for 2D positioning -
     glViewport( m_RenderStateProxy->m_XPos, screenHeight - ( m_RenderStateProxy->m_YPos + m_RenderStateProxy->m_Height ),
     		    m_RenderStateProxy->m_Width, m_RenderStateProxy->m_Height );
 
@@ -81,6 +81,7 @@ void Ortho::Render( int pass ) throw(std::exception)
 //    float y0(m_RenderStateProxy->m_YPos+m_RenderStateProxy->m_Height-1);
 //    float y1(m_RenderStateProxy->m_YPos);
 //    glOrtho( x0, x1, y0, y1, -1000.0f, 1000.0f );
+    // TODO: Override this with a virtual coord bounding box (x0,y0,x1,y1)
     float w(5);
     float h = w * float(m_RenderStateProxy->m_Width)/float(m_RenderStateProxy->m_Height);
     glOrtho( -w, w, -h, h, -100.0f, 100.0f );

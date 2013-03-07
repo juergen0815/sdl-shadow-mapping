@@ -61,20 +61,26 @@ bool Entity::Update( float ticks ) throw(std::exception)
     return false;
 }
 
-void Entity::Render( int pass ) throw(std::exception)
+void Entity::SetupRender( int pass )
 {
     // if regular mode do transform, if replay read & load projection matrix from render state
     glMatrixMode(GL_MODELVIEW); // not sure how much overhead this generates
     glPushMatrix();
     glMultMatrixf( GetRenderState()->GetMatrix() );
-    // store "projected" matrix - not the projection matrix!!!
-//    glGetFloatv( GL_MODELVIEW_MATRIX, (float*)GetRenderState()->GetProjectionMatrix() );
+}
+
+void Entity::CleanupRender( int pass )
+{
+    glPopMatrix();
+}
+
+void Entity::Render( int pass ) throw(std::exception)
+{
 
     uint32_t flags = GetRenderState()->GetFlags();
 
     int glBlendSrc(0), glBlendDst(0);
-    int alphaEnabled;
-    glGetIntegerv(GL_ALPHA_TEST, &alphaEnabled);
+    bool alphaEnabled = glIsEnabled(GL_ALPHA_TEST);
     if (!alphaEnabled && (flags & RenderState::ALPHA_F) )
     {
         glGetIntegerv(GL_BLEND_SRC, &glBlendSrc);
@@ -97,29 +103,40 @@ void Entity::Render( int pass ) throw(std::exception)
         glDisable(GL_BLEND);
     }
 
+    // Do the transformation - can be over ridden for each pass.
+    // Default is multiply matrix into modelview. Backs up current modelview (glPushMatrix)
+    SetupRender( pass );
+    // render all children
     RenderSubTree( pass );
+    // restore the previous matrix. Default is a simple glPopMatrix
+    CleanupRender(pass);
 
+    if (!blendEnabled && (flags & RenderState::BLEND_F) )
+    {
+        // we enabled blend, disable it again
+        glDisable(GL_BLEND);
+    }
     if (!alphaEnabled && (flags & RenderState::ALPHA_F) )
     {
         glBlendFunc( glBlendSrc, glBlendDst);
+        glDisable(GL_ALPHA_TEST);
     }
-    glPopMatrix();
 }
 
 void Entity::RenderSubTree( int pass ) throw( std::exception )
 {
     // no more transformation, etc.
+    // store "projected" matrix - not the projection matrix!!!
+//    glGetFloatv( GL_MODELVIEW_MATRIX, (float*)GetRenderState()->GetProjectionMatrix() );
 
     // render all children
-    for( auto it = m_RenderList.begin(); it != m_RenderList.end(); ) {
-        EntityPtr entity = *it;
+    for( auto& entity : m_RenderList ) {
         if ( entity->IsFlagSet( Entity::F_ENABLE|Entity::F_VISIBLE ) &&
             !entity->IsFlagSet( Entity::F_DELETE ) )
         {
             // don't bother rendering if we are marked for deletion
             entity->Render( pass );
         }
-        ++it;
     }
     DoRender( pass );
 }

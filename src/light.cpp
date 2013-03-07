@@ -55,17 +55,48 @@ bool Light::DoInitialize( Renderer* renderer ) throw(std::exception)
     return true;
 }
 
+void Light::SetupRender( int pass )
+{
+    // disable light for shadow pass
+    if ( pass & PASS_SHADOW_MAP_F ) {
+        glDisable(m_RenderStateProxy->m_Index);
+    }
+    // this we only do if we want to "draw" the light - we don't in shadow passes
+    if ( pass & PASS_LIGHTING_F ) {
+        // if regular mode do transform, if replay read & load projection matrix from render state
+        glMatrixMode(GL_MODELVIEW); // not sure how much overhead this generates
+        glPushMatrix();
+        glMultMatrixf( GetRenderState()->GetMatrix() );
+    }
+}
+
+void Light::CleanupRender( int pass )
+{
+    if ( pass & PASS_LIGHTING_F ) {
+        glPopMatrix();
+    }
+    // enable light after shadow pass
+    if ( pass & PASS_SHADOW_MAP_F ) {
+        glEnable(m_RenderStateProxy->m_Index);
+    }
+
+}
+
 void Light::DoRender( int pass ) throw(std::exception)
 {
-//    glEnable(m_RenderStateProxy->m_Index);   // MUST enable each light source after configuration
+    if ( pass & PASS_LIGHTING_F )
+    {
+        //    glEnable(m_RenderStateProxy->m_Index);   // MUST enable each light source after configuration
 
-    // transformed projectiopn matrix
-    Matrix modelview;
-    glGetFloatv( GL_MODELVIEW_MATRIX, (float*)modelview );
+        // transformed projectiopn matrix
+        Matrix modelview;
+        glGetFloatv( GL_MODELVIEW_MATRIX, (float*)modelview );
 
-    // copy position into vector - might need to overwrite spot light - need to transform as well
-//    m_RenderStateProxy->m_Position = &((const float*)modelview)[Matrix::POS_X];
-//    glLightfv(GL_LIGHT0, GL_POSITION, (float*)m_RenderStateProxy->m_Position );
+        // copy position into vector - might need to overwrite spot light - need to transform as well
+    //    m_RenderStateProxy->m_Position = &((const float*)modelview)[Matrix::POS_X];
+    //    glLightfv(GL_LIGHT0, GL_POSITION, (float*)m_RenderStateProxy->m_Position );
+
+    }
 }
 
 void Light::DoUpdate( float ticks ) throw(std::exception)

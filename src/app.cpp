@@ -59,7 +59,7 @@ bool OnHandleEvent( const SDL_Event& event, EntityPtr c1, EntityPtr c2, EntityPt
         }
         vp = boost::dynamic_pointer_cast<Viewport>(c2);
         if ( vp ) {
-            vp->Set(event.resize.w * 0.8, 0, event.resize.w * 0.2, event.resize.h*0.5);
+            vp->Set(event.resize.w * 0.8, event.resize.h*0.5, event.resize.w * 0.2, event.resize.h*0.5);
         }
         OrthoPtr ortho = boost::dynamic_pointer_cast<Ortho>(c3);
         if ( ortho ) {
@@ -146,7 +146,7 @@ void App::InitScene( int width, int height )
 #else
     WorldPtr world( new World );
 
-    ViewportPtr viewport2(new Viewport(width * 0.8, 0, width* 0.2, height*0.5));
+    ViewportPtr viewport2(new Viewport(width * 0.8, height*0.5, width* 0.2, height*0.5));
     viewport2->SetClearFlags(0);
     renderer->AddEntity(viewport2);
 

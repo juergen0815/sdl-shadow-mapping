@@ -86,6 +86,7 @@ void Stage::Render( int pass ) throw(std::exception)
     do {
 
         int p = renderPasses[renderPass];
+        unsigned int passMask = 1<<p;
         switch ( p )
         {
         case PASS_SHADOW_MAP: {
@@ -108,39 +109,58 @@ void Stage::Render( int pass ) throw(std::exception)
 
                 // switch to modelview matrix in order to set scene
                 glMatrixMode(GL_MODELVIEW);
-                glLoadIdentity();
+                glPushMatrix();
 
+                // clear texture (depth only)
+                glClear(GL_DEPTH_BUFFER_BIT);
+
+                // TODO: Tune GL to remove all unnecessary renderings
+                //       - no back faces
+                //       - no textures
+
+                // re-render the tree from each light position. Depth only, additive into same texture
                 for ( const auto& light : lights ) {
-                    glPushMatrix();
+                    glLoadIdentity();
                     // 1) project light
                     glMultMatrixf( (float*)light->GetRenderState()->GetMatrix() );
                     // 2) render world from light position into offscreen buffer - need to set the frustum for the world
                     //    Only depth component! no texturing, etc
-                    m_World->Render( p );
-                    glPopMatrix();
+                    m_World->Render( passMask );
                 }
+                glPopMatrix();
                 m_ShadowMap.Disable();
+
+                float rect[] = { 0,0,
+                                 m_ShadowMapStage->GetWidth(), 0,
+                                 m_ShadowMapStage->GetWidth(), m_ShadowMapStage->GetHeight(),
+                                 0, m_ShadowMapStage->GetHeight()
+                               };
+
+                // switch lighting back on
+                if ( lighting ) glEnable(GL_LIGHTING);
             }
 
             // TODO: Render texture into shadow stage
 
-            // switch lighting back on
-            if ( lighting ) glEnable(GL_LIGHTING);
             }break;
         case PASS_LIGHTING:
         default:
             // default lighting pass - render whole scene
-            if ( !lighting ) glEnable(GL_LIGHTING);
-            m_MainStage->Render( p );
+            if ( !lighting ) {
+                glEnable(GL_LIGHTING);
+            }
+            m_MainStage->Render( passMask );
             // Render lighting "window"
-            m_LightingStage->Render( p );
+            m_LightingStage->Render( passMask );
             // render shadow map into 2D window
             m_ShadowMapStage->Render( PASS_LIGHTING );
             break;
         case PASS_SHADOW_TEST:
             // render shadows from shadow map into scene
-            if ( !lighting ) glEnable(GL_LIGHTING);
-            // m_MainStage->Render( p );
+            if ( !lighting ) {
+                glEnable(GL_LIGHTING);
+            }
+            // m_MainStage->Render( passMaskp );
             break;
         }
 

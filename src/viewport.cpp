@@ -88,8 +88,12 @@ void Viewport::Render( int pass ) throw(std::exception)
     Matrix projection;
     glGetFloatv( GL_PROJECTION_MATRIX, (float*)projection );
 
-    glViewport( m_RenderStateProxy->m_XPos, m_RenderStateProxy->m_YPos,
-                (GLsizei)m_RenderStateProxy->m_Width, (GLsizei)m_RenderStateProxy->m_Height);
+    // Position from the top
+    const SDL_VideoInfo* info = SDL_GetVideoInfo();
+    float screenHeight(info->current_h);
+    // make top the 0 for 2D positioning - must match ortho
+    glViewport( m_RenderStateProxy->m_XPos, screenHeight - ( m_RenderStateProxy->m_YPos + m_RenderStateProxy->m_Height ),
+                m_RenderStateProxy->m_Width, m_RenderStateProxy->m_Height );
 
     // set perspective viewing frustum
     glMatrixMode(GL_PROJECTION);

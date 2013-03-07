@@ -36,6 +36,11 @@ private:
         RP_SYSTEM,
         RP_SYSTEM_MASK = (1<<RP_SYSTEM)-1,
     };
+    enum enRENDERMODE {
+        RM_DEFAULT = 0,
+        RM_SAVE_REPLAY,
+        RM_LOAD_REPLAY
+    };
 	bool        m_Terminate;
 
     EntityList  m_InitList;

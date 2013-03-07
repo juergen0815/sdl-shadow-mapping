@@ -107,6 +107,16 @@ protected:
 
     virtual void RenderSubTree( int pass ) throw( std::exception );
 
+    /*! Do the transformation - can be over ridden for each pass.
+        Default is multiply matrix into modelview. Backs up current modelview (glPushMatrix)
+    */
+    virtual void SetupRender( int pass );
+
+    /*! restore the previous matrix. Default is a simple glPopMatrix
+     *
+     */
+    virtual void CleanupRender( int pass );
+
     friend class Renderer;
 };
 

@@ -31,12 +31,17 @@ public:
     Light();
 
     virtual ~Light();
+
 protected:
     virtual bool DoInitialize( Renderer* renderer ) throw(std::exception);
 
     virtual void DoRender( int pass ) throw(std::exception);
 
     virtual void DoUpdate( float ticks ) throw(std::exception);
+
+    virtual void SetupRender( int pass );
+
+    virtual void CleanupRender( int pass );
 
 };
 
