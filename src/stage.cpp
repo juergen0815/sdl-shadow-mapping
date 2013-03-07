@@ -131,9 +131,9 @@ void Stage::Render( int pass ) throw(std::exception)
                 m_ShadowMap.Disable();
 
                 float rect[] = { 0,0,
-                                 m_ShadowMapStage->GetWidth(), 0,
-                                 m_ShadowMapStage->GetWidth(), m_ShadowMapStage->GetHeight(),
-                                 0, m_ShadowMapStage->GetHeight()
+                                 (float)m_ShadowMapStage->GetWidth(), 0,
+                                 (float)m_ShadowMapStage->GetWidth(), (float)m_ShadowMapStage->GetHeight(),
+                                 0, (float)m_ShadowMapStage->GetHeight()
                                };
 
                 // switch lighting back on
