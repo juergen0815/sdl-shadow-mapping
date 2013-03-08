@@ -38,6 +38,9 @@ protected:
 
     virtual void RenderSubTree( int pass ) throw( std::exception );
 
+    virtual void SetupRender( int pass );
+
+    virtual void CleanupRender( int pass );
 };
 
 typedef boost::shared_ptr<World> WorldPtr;

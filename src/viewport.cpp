@@ -66,6 +66,14 @@ Viewport::~Viewport()
 {
 }
 
+void Viewport::Reset( float fov, float zNear /*= 1.0f*/, float zFar /*= 100.0f*/ )
+{
+    m_RenderStateProxy->m_Frustum.m_Fov   = fov;
+    m_RenderStateProxy->m_Frustum.m_ZNear = zNear;
+    m_RenderStateProxy->m_Frustum.m_ZFar  = zFar;
+    m_RenderStateProxy->m_Frustum.Calculate( GetWidth(), GetHeight() );
+}
+
 void Viewport::Set( int x, int y, int width, int height )
 {
     m_RenderStateProxy->Set(x,y,width,height);
@@ -76,18 +84,8 @@ void Viewport::SetSize( int width, int height )
     m_RenderStateProxy->Set(m_RenderStateProxy->m_XPos,m_RenderStateProxy->m_YPos,width,height);
 }
 
-void Viewport::Render( int pass ) throw(std::exception)
+void Viewport::SetupRender( int pass )
 {
-    // backup previous viewport - needed if we render into a pbuffer
-    GLint vp[4];
-    glGetIntegerv( GL_VIEWPORT, vp );
-    // backup projection matrix for internal storage
-    Matrix modelview;
-    glGetFloatv( GL_MODELVIEW_MATRIX, (float*)modelview );
-
-    Matrix projection;
-    glGetFloatv( GL_PROJECTION_MATRIX, (float*)projection );
-
     // Position from the top
     const SDL_VideoInfo* info = SDL_GetVideoInfo();
     float screenHeight(info->current_h);
@@ -101,9 +99,8 @@ void Viewport::Render( int pass ) throw(std::exception)
 
     // switch to modelview matrix in order to set scene
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
     // if regular mode do transform, if replay read & load projection matrix from render state
-    glMultMatrixf( GetRenderState()->GetMatrix() );
+    glLoadMatrixf( GetRenderState()->GetMatrix() );
 
     // use a flag to enable clear color / and clear flags
     if ( m_RenderStateProxy->m_ClearFlags ) {
@@ -116,7 +113,24 @@ void Viewport::Render( int pass ) throw(std::exception)
         // clear buffer
         glClear( m_RenderStateProxy->m_ClearFlags );
     }
+}
 
+void Viewport::CleanupRender( int pass )
+{
+    // nothing here
+}
+
+void Viewport::Render( int pass ) throw(std::exception)
+{
+    // backup previous viewport - needed if we render into a pbuffer
+    GLint vp[4];
+    glGetIntegerv( GL_VIEWPORT, vp );
+    // backup projection matrix for internal storage
+    Matrix modelview;
+    glGetFloatv( GL_MODELVIEW_MATRIX, (float*)modelview );
+
+    Matrix projection;
+    glGetFloatv( GL_PROJECTION_MATRIX, (float*)projection );
 
     // apply local viewport and render children
     Entity::Render( pass );

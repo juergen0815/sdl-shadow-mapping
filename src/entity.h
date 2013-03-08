@@ -70,9 +70,9 @@ public:
 
 	bool IsFlagSet( unsigned int flags ) const { return (m_Flags & flags) != 0; }
 
-    void SetFlag( enFLAG flag ) { m_Flags |= flag; }
+	unsigned int SetFlags( unsigned int flag ) { unsigned int f = m_Flags; m_Flags |= flag; return f; }
 
-    void ClearFlag( enFLAG flag ) { m_Flags &= ~flag; }
+    unsigned int ClearFlags( unsigned int flag ) { unsigned int f = m_Flags; m_Flags &= ~flag; return f; }
 
     RenderStatePtr GetRenderState();
 

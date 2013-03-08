@@ -17,6 +17,9 @@
 #include "world.h"
 #include "framebuffer.h"
 
+class DrawRectangle;
+typedef boost::shared_ptr<DrawRectangle> DrawRectanglePtr;
+
 class Stage : public Entity
 {
 public:
@@ -35,10 +38,13 @@ private:
     OrthoPtr    m_ShadowMapStage;   // a viewport to display the shado map texture (as an grey scale image)
     ViewportPtr m_LightingStage;    // default lit side stage - no shadows
 
-    CameraPtr   m_Camera;           // Once camera for main stage
+    CameraPtr   m_Camera;           // this is actually the projection matrix for the world from the camera position
+    ViewportPtr m_ShadowProjection; // this is a "virtual camera" from the light position
     WorldPtr    m_World;            // this is the world we want to render
 
     FrameBuffer m_ShadowMap;        // we render our "world" into a offscreen depth buffer
+
+    DrawRectanglePtr m_ShadowRect;  // rectangle to draw shadow map into
 public:
     Stage( int w, int h, SDL_Joystick* joystick );
 

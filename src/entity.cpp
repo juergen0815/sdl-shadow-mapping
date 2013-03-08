@@ -66,7 +66,7 @@ void Entity::SetupRender( int pass )
     // if regular mode do transform, if replay read & load projection matrix from render state
     glMatrixMode(GL_MODELVIEW); // not sure how much overhead this generates
     glPushMatrix();
-    glMultMatrixf( GetRenderState()->GetMatrix() );
+    glLoadMatrixf( GetRenderState()->GetMatrix() );
 }
 
 void Entity::CleanupRender( int pass )

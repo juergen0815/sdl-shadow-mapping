@@ -24,7 +24,7 @@ struct Frustum
     float   m_Top;
     Matrix  m_Matrix;
 
-    Frustum( float fov = 60.0f, float zNear = 1.0f, float zFar = 100.0f );
+    Frustum( float fov = 45.0f, float zNear = 1.0f, float zFar = 100.0f );
 
     void Calculate( int w, int h );
 
@@ -52,7 +52,7 @@ private:
         , m_Width(width)
         , m_Height(height)
         , m_ClearColor(0.25f, 0.25f, 0.25f, 1.0f )
-        , m_ClearFlags(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        , m_ClearFlags( /* GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT */ )
         {
             m_Frustum.Calculate( width, height );
             // TODO:
@@ -78,6 +78,8 @@ public:
 
     void SetClearColor( const Vector& col );
 
+    void Reset( float fov, float zNear = 1.0f, float zFar = 100.0f );
+
     void Set( int x, int y, int width, int height );
 
     void SetSize( int width, int height );
@@ -94,6 +96,10 @@ private:
     virtual bool DoInitialize( Renderer* renderer ) throw(std::exception);
 
     virtual void DoRender( int pass ) throw(std::exception) {}
+
+    virtual void SetupRender( int pass );
+
+    virtual void CleanupRender( int pass );
 };
 
 typedef boost::shared_ptr< Viewport > ViewportPtr;

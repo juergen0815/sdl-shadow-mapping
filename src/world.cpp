@@ -75,6 +75,15 @@ bool World::DoInitialize( Renderer* renderer ) throw( std::exception )
     return r;
 }
 
+void World::SetupRender( int pass )
+{
+    // do nothing. World uses identity. Does not transform
+}
+
+void World::CleanupRender( int pass )
+{
+}
+
 void World::RenderSubTree( int pass ) throw( std::exception )
 {
     // no more transformation, etc.
