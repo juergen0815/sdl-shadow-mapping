@@ -79,7 +79,7 @@ bool FrameBuffer::Allocate( int width, int height, int type /* = GL_RGBA */ )
         ASSERT( b, "Error allocating texture!" );
         // Set "renderedTexture" as our depth attachement #0
         glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_Texture->GetTextureId(), 0);
-        glDrawBuffer( NULL );
+        glDrawBuffer( GL_NONE );
     }
 
     b &= ( glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE );

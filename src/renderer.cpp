@@ -68,7 +68,7 @@ void Renderer::AddEntity( EntityPtr entity, int priority /*= 0*/  )
 
 void Renderer::RemoveEntity( EntityPtr entity )
 {
-    entity->SetFlag( Entity::F_DELETE );
+    entity->SetFlags( Entity::F_DELETE );
 }
 
 EntityPtr Renderer::FindEntity( const std::string& name )
